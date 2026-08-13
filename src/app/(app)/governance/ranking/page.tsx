@@ -59,7 +59,7 @@ export default async function PortfolioRankingPage() {
         <h1 className="text-lg font-semibold tracking-tight">Portfolio Ranking</h1>
         <p className="text-sm text-muted-foreground">
           Every scored initiative, ranked. Portfolio and Specialist scores share
-          this view but are not economically comparable — the type badge stays visible.
+          this view but are not directly comparable, so the type badge stays visible.
         </p>
       </div>
       <PortfolioTable
