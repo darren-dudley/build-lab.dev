@@ -90,7 +90,7 @@ export default async function RapidDeploymentPage() {
         {stats.map((s) => {
           const inner = (
             <div className="rounded-lg border px-3 py-2.5 transition-colors hover:bg-accent/40">
-              <div className="text-xl font-semibold tabular-nums">{s.value}</div>
+              <div className="score-figure text-xl font-semibold">{s.value}</div>
               <div className="text-[11px] text-muted-foreground">{s.label}</div>
             </div>
           );

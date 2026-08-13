@@ -191,7 +191,7 @@ export default async function AnalyticsPage() {
 function Tile({ label, value, href }: { label: string; value: number | string; href?: string }) {
   const inner = (
     <div className="rounded-lg border px-3 py-2.5 transition-colors hover:bg-accent/40">
-      <div className="text-xl font-semibold tabular-nums">{value}</div>
+      <div className="score-figure text-xl font-semibold">{value}</div>
       <div className="text-[11px] leading-tight text-muted-foreground">{label}</div>
     </div>
   );

@@ -1,12 +1,13 @@
-# Build-Lab.dev — AI Initiative Portfolio Platform
+# BCP Build Lab (build-lab.dev)
 
 ## What this is
 
-A production-quality B2B platform for managing AI initiatives from intake through triage, scoring, governance, human assignment, execution, and value measurement. Full product spec lives in the conversation history; the distilled architecture is in `docs/01`–`docs/05` — **read those before making structural changes.**
+Product name: **BCP Build Lab**. A production-quality B2B platform for managing AI initiatives from intake through triage, scoring, governance, human assignment, execution, and value measurement. Full product spec lives in the conversation history; the distilled architecture is in `docs/01`–`docs/05` — **read those before making structural changes.**
 
 - **Repo:** https://github.com/darren-dudley/build-lab.dev · **Live:** https://build-lab.dev (auto-deploys from `main`)
 - **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind v4 · shadcn/ui · Prisma 7 (config in `prisma.config.ts`, not schema) · Neon Postgres · Auth.js v5 credentials
-- **Public `/` is intentionally blank** (product decision). The app lives behind `/login`.
+- **Public `/` is intentionally blank** (product decision). The app lives behind `/login`; public intake at `/submit`.
+- **Brand:** palette pulled from baincapital.com (navy #152D48, paper #FEFCF5, blue ramp #1E5E94/#0779BF/#ABCAE9/#B2DEFF); Schibsted Grotesk UI face; mono `score-figure` class for score readouts. Status colors stay semantic — never reuse brand blues for health/flags.
 
 ## Non-negotiable product principles
 

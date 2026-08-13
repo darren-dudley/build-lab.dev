@@ -78,7 +78,7 @@ export default async function GovernanceQueuePage() {
                   <div className="flex shrink-0 flex-col items-end gap-2">
                     {score ? (
                       <div className="text-right">
-                        <div className="text-xl font-semibold tabular-nums">{score.compositeScore}</div>
+                        <div className="score-figure text-xl font-semibold">{score.compositeScore}</div>
                         <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
                           {isPortfolio ? "Portfolio" : "Specialist"} score
                         </div>

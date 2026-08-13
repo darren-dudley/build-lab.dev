@@ -222,7 +222,7 @@ function GroupRows({
               {r.scoreType}
             </span>
           </td>
-          <td className="px-3 py-2 text-right font-semibold tabular-nums">{r.composite}</td>
+          <td className="score-figure px-3 py-2 text-right font-semibold">{r.composite}</td>
           <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.opportunityQuality}</td>
           <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
             {r.bcPriority != null ? r.bcPriority.toFixed(2) : "—"}

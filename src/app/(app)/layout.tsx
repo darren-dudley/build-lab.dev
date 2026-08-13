@@ -21,7 +21,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r bg-sidebar">
+      <aside className="w-56 shrink-0 border-r border-sidebar-border bg-sidebar">
         <div className="sticky top-0 h-screen">
           <SideNav sections={sections} />
         </div>

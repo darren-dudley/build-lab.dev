@@ -9,16 +9,17 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex h-full flex-col gap-4 overflow-y-auto px-3 py-4">
-      <div className="px-2">
-        <Link href="/home" className="text-sm font-semibold tracking-tight">
-          AI Initiative Portfolio
-        </Link>
-      </div>
+    <nav className="flex h-full flex-col gap-5 overflow-y-auto px-3 py-5 text-sidebar-foreground">
+      <Link href="/home" className="flex items-baseline gap-2 px-2">
+        <span className="rounded-sm bg-sidebar-primary px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-sidebar-primary-foreground">
+          BCP
+        </span>
+        <span className="text-sm font-semibold tracking-tight text-white">Build Lab</span>
+      </Link>
       {sections.map((section, i) => (
-        <div key={section.label ?? i} className="space-y-0.5">
+        <div key={section.label ?? i} className="space-y-px">
           {section.label ? (
-            <div className="px-2 pb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <div className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/45">
               {section.label}
             </div>
           ) : null}
@@ -31,10 +32,10 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "block rounded-md px-2 py-1.5 text-sm transition-colors",
+                  "relative block rounded-md py-1.5 pl-3 pr-2 text-[13px] transition-colors",
                   active
-                    ? "bg-accent font-medium text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                    ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-primary"
+                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                 )}
               >
                 {item.label}

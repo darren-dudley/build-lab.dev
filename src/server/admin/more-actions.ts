@@ -27,6 +27,37 @@ export async function upsertUserAction(userId: string | null, raw: unknown) {
     return { ok: false as const, error: "New users need an initial password (10+ characters)" };
   }
 
+  // Lockout guards: admins cannot deactivate themselves or drop their own
+  // ADMIN role, and the last active admin can never lose admin access.
+  if (userId === session.user.id) {
+    if (data.isActive === false) {
+      return { ok: false as const, error: "You can't deactivate your own account" };
+    }
+    if (!data.roles.includes("ADMIN")) {
+      return { ok: false as const, error: "You can't remove your own administrator role" };
+    }
+  }
+  if (userId && (!data.roles.includes("ADMIN") || data.isActive === false)) {
+    const target = await db.user.findUnique({
+      where: { id: userId },
+      select: { isActive: true, roles: { select: { role: true } } },
+    });
+    const targetIsActiveAdmin = target?.isActive && target.roles.some((r) => r.role === "ADMIN");
+    if (targetIsActiveAdmin) {
+      const otherActiveAdmins = await db.user.count({
+        where: {
+          id: { not: userId },
+          isActive: true,
+          deletedAt: null,
+          roles: { some: { role: "ADMIN" } },
+        },
+      });
+      if (otherActiveAdmins === 0) {
+        return { ok: false as const, error: "This is the last active administrator" };
+      }
+    }
+  }
+
   await db.$transaction(async (tx) => {
     const base = {
       name: data.name,

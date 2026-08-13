@@ -14,19 +14,29 @@ export async function addCommentAction(
 ) {
   const session = await requireSession();
   const text = z.string().min(1).max(8000).parse(body.trim());
+  z.string().uuid().parse(entityId);
 
   if (entityType === "INITIATIVE") {
-    // Internal roles, or the requester on their own initiative (Needs Info replies)
-    const initiative = await db.initiative.findUniqueOrThrow({
-      where: { id: entityId },
+    // Object-level check: target must exist, and the caller must be either
+    // the requester on their own initiative or an internal role.
+    const initiative = await db.initiative.findUnique({
+      where: { id: entityId, deletedAt: null },
       select: { requesterId: true },
     });
+    if (!initiative) throw new AuthorizationError("Not found");
     const isOwner = initiative.requesterId === session.user.id;
     if (!isOwner && !hasPermission(session.user.roles, "initiative.viewAll")) {
       throw new AuthorizationError();
     }
-  } else {
+  } else if (entityType === "PROJECT") {
     await requirePermission("project.view");
+    const project = await db.project.findUnique({
+      where: { id: entityId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!project) throw new AuthorizationError("Not found");
+  } else {
+    throw new AuthorizationError("Comments are not supported on this entity");
   }
 
   await db.comment.create({

@@ -75,7 +75,7 @@ export default async function TriageQueuePage() {
                   <Td>{i.intakeResponse?.effortEstimate ? EFFORT_LABELS[i.intakeResponse.effortEstimate] : "—"}</Td>
                   <Td className="text-right tabular-nums">
                     {i.scores[0] ? (
-                      <span className="font-medium">{i.scores[0].compositeScore}</span>
+                      <span className="score-figure font-medium">{i.scores[0].compositeScore}</span>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}

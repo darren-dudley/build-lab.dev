@@ -99,7 +99,7 @@ export function ScoringPanel(props: Props) {
               {props.isPortfolio ? "Portfolio Priority Score" : "Specialist Priority Score"}
             </div>
           </div>
-          <div className="mt-1 text-2xl font-semibold tabular-nums">
+          <div className="score-figure mt-1 text-2xl font-semibold">
             {props.currentScore.composite}
             <span className="text-sm font-normal text-muted-foreground"> / 100</span>
           </div>
