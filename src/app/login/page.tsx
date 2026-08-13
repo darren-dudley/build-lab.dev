@@ -45,8 +45,8 @@ export default async function LoginPage({
             From idea to measured value.
           </p>
           <p className="max-w-sm text-sm leading-relaxed text-sidebar-foreground/70">
-            A shared home for AI initiative ideas — capture them, evaluate them
-            consistently, and follow what gets built.
+            A shared home for AI ideas. Capture them, evaluate them the same
+            way every time, and follow what gets built.
           </p>
         </div>
         <p className="text-xs text-sidebar-foreground/50">
