@@ -1,19 +1,33 @@
-# Build-Lab.dev
+# Build-Lab.dev — AI Initiative Portfolio Platform
 
 ## What this is
 
-Build-Lab.dev is a hub for rapid-deployment projects — a launchpad for spinning up and shipping many small projects quickly.
+A production-quality B2B platform for managing AI initiatives from intake through triage, scoring, governance, human assignment, execution, and value measurement. Full product spec lives in the conversation history; the distilled architecture is in `docs/01`–`docs/05` — **read those before making structural changes.**
 
-- **Repo:** https://github.com/darren-dudley/build-lab.dev
-- **Stage:** Initial setup (August 2026). Nothing built yet.
+- **Repo:** https://github.com/darren-dudley/build-lab.dev · **Live:** https://build-lab.dev (auto-deploys from `main`)
+- **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind v4 · shadcn/ui · Prisma 7 (config in `prisma.config.ts`, not schema) · Neon Postgres · Auth.js v5 credentials
+- **Public `/` is intentionally blank** (product decision). The app lives behind `/login`.
 
-## Decisions not yet made
+## Non-negotiable product principles
 
-- Monorepo vs. separate repos per project
-- Hub site tech stack (Next.js on Vercel is the working assumption, not decided)
-- Domain/deployment setup
+- **Initiatives** (evaluated opportunities) and **Projects** (approved execution) are distinct objects — never conflate.
+- **Scoring ranks; humans decide.** No code path may compute, suggest, or default a delivery-lane assignment (Rapid Deployment / External FDE Pod / Core Transformation). This is unit-tested.
+- Intake responses are immutable after submission; triage normalization is stored separately.
+- Scores, governance decisions, transitions, and audit events are append-only. Never silently overwrite historical records.
+- All authorization is server-side via `src/server/rbac` `requirePermission()` — nav hiding is UX, not security.
 
-When starting new work here, check with Darren on these before assuming a structure.
+## Conventions
+
+- Business logic lives in `src/server/<module>/` — never in UI components.
+- All state changes go through `src/server/workflow` (transition whitelist).
+- The scoring engine (`src/server/scoring`) is pure — no I/O, no dates; persistence wraps it.
+- Env: `.env.local` (gitignored) — `DATABASE_URL` (Neon pooler, runtime), `DIRECT_DATABASE_URL` (migrations), `AUTH_SECRET`, `SEED_PASSWORD`.
+- DB workflow: `npm run db:migrate` (dev), `npm run db:seed` (idempotent), `npm run test` (Vitest).
+- Prisma CLI reads `prisma.config.ts` (Prisma 7 style); runtime client uses `@prisma/adapter-neon` in `src/server/db.ts`.
+
+## Build state
+
+Phase 1 (foundation: schema, auth, RBAC, shell, seed) complete. Phases 2–6 per `docs/05-implementation-plan.md`. Consequential assumptions are logged there — check them before reversing course.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
