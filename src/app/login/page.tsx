@@ -90,7 +90,7 @@ export default async function LoginPage({
             </Button>
           </form>
           <p className="text-xs text-muted-foreground">
-            Access is by invitation — contact your administrator.
+            Access is by invitation. Contact your administrator.
           </p>
         </div>
       </div>

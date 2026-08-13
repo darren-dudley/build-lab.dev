@@ -31,7 +31,7 @@ export default async function PublicDraftPage({
           {initiative.name === "Untitled initiative" ? "Your initiative" : initiative.name}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Thanks — your submission is in. The team will review it and follow up
+          Thanks, your submission is in. The team will review it and follow up
           by email. You can bookmark this page to check its status.
         </p>
       </div>

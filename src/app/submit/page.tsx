@@ -16,7 +16,7 @@ export default function PublicSubmitPage() {
         <h1 className="text-lg font-semibold tracking-tight">Submit an AI initiative</h1>
         <p className="text-sm text-muted-foreground">
           Takes about 5–7 minutes if you know the opportunity well. Your answers
-          save automatically — keep this page&apos;s link if you want to finish later.
+          save automatically. Keep this page&apos;s link if you want to finish later.
         </p>
       </div>
       <div className="space-y-3">
