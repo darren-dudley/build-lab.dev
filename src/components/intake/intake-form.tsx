@@ -247,7 +247,7 @@ function StepRouting({
         <Input
           value={d.name ?? ""}
           onChange={(e) => update({ name: e.target.value })}
-          placeholder={portfolio ? "e.g. Automated QBR decks for Meridian" : "e.g. FP&A variance narrative drafts"}
+          placeholder={portfolio ? "e.g. Automated PMC decks for Meridian" : "e.g. FP&A variance narrative drafts"}
         />
       </Field>
 

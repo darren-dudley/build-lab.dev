@@ -42,11 +42,11 @@ export default async function LoginPage({
         </div>
         <div className="space-y-4">
           <p className="max-w-md text-2xl font-semibold leading-snug tracking-tight text-white">
-            Every AI initiative, from idea to measured value.
+            From idea to measured value.
           </p>
           <p className="max-w-sm text-sm leading-relaxed text-sidebar-foreground/70">
-            Intake, triage, scoring, governance, and delivery — one system of
-            record for the portfolio.
+            A shared home for AI initiative ideas — capture them, evaluate them
+            consistently, and follow what gets built.
           </p>
         </div>
         <p className="text-xs text-sidebar-foreground/50">

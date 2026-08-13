@@ -22,8 +22,8 @@ async function main() {
     });
   }
 
-  // 1. QBR — active Rapid Deployment in Build, healthy, mid-flight
-  const qbr = await startFor("Automated QBR deck generation", dan, "2026-09-30");
+  // 1. PMC — active Rapid Deployment in Build, healthy, mid-flight
+  const qbr = await startFor("Automated PMC deck generation", dan, "2026-09-30");
   if (qbr) {
     const phases = await db.projectPhase.findMany({ where: { projectId: qbr.id }, orderBy: { sortOrder: "asc" } });
     const build = phases.find((p) => p.name === "Build")!;

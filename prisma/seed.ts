@@ -51,7 +51,7 @@ const SYSTEMS = ["Salesforce", "HubSpot", "NetSuite", "QuickBooks", "SAP", "Orac
 
 const VALUE_LEVERS = ["Revenue", "Cost", "Margin", "Productivity", "Customer Experience", "Quality", "Risk", "Speed", "Strategic Capability", "Other"];
 
-const TAGS = ["QBR automation", "Sales-call preparation", "Financial variance analysis", "Customer-service agent", "Document generation", "Knowledge search", "Churn prediction", "Pricing analysis", "Contract review", "Content generation", "Recruiting workflow"];
+const TAGS = ["PMC automation", "Sales-call preparation", "Financial variance analysis", "Customer-service agent", "Document generation", "Knowledge search", "Churn prediction", "Pricing analysis", "Contract review", "Content generation", "Recruiting workflow"];
 
 const DIMENSIONS = ["BUSINESS_IMPACT", "TIME_TO_ARTIFACT", "DATA_FEASIBILITY", "SPONSORSHIP", "STRATEGIC_FIT"] as const;
 

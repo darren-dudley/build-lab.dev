@@ -41,14 +41,14 @@ type Blueprint = {
 const B: Blueprint[] = [
   // ── High-priority, governance-ready portfolio opportunities ──
   {
-    name: "Automated QBR deck generation", requestType: "SPECIALIST_PORTCO", company: "Meridian Logistics",
+    name: "Automated PMC deck generation", requestType: "SPECIALIST_PORTCO", company: "Meridian Logistics",
     functionLabel: "Sales", requesterEmail: "maya.johnson@build-lab.dev", sponsor: "Rick Alvarez, VP Sales",
     problem: "Account managers spend 5–7 hours assembling each quarterly business review deck by hand.",
-    today: "AMs export CRM reports, copy usage data from the ops dashboard, and rebuild slides in PowerPoint. ~40 QBRs per quarter, ~6 hours each.",
-    aiTask: "Create first-pass QBR decks using CRM, customer usage, and support data.",
-    success: "80% of QBRs start from a generated deck; AM prep time under 90 minutes.",
+    today: "AMs export CRM reports, copy usage data from the ops dashboard, and rebuild slides in PowerPoint. ~40 PMCs per quarter, ~6 hours each.",
+    aiTask: "Create first-pass PMC decks using CRM, customer usage, and support data.",
+    success: "80% of PMCs start from a generated deck; AM prep time under 90 minutes.",
     effort: "MEDIUM", tta: [3, "WEEKS"], onlyOne: "YES", owner: "Rick Alvarez, VP Sales",
-    kpis: [{ metric: "Hours per QBR deck", baseline: "6", target: "1.5" }],
+    kpis: [{ metric: "Hours per PMC deck", baseline: "6", target: "1.5" }],
     to: "READY_FOR_GOVERNANCE", dims: [4, 5, 4, 5, 5],
     flags: [{ type: "SIMILAR_REQUESTS_EXIST", note: "Sales-call prep request from Harbor is closely related." }],
   },

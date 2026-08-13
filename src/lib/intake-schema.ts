@@ -65,7 +65,7 @@ export const TTA_HELPER =
   "By artifact, we mean something sufficiently functional that a real user can interact with it or evaluate its usefulness.";
 
 export const AI_TASK_HELPER =
-  'Describe the task itself, not just "use AI." Example: "Create first-pass QBR decks using CRM, customer usage, and support data."';
+  'Describe the task itself, not just "use AI." Example: "Create first-pass PMC decks using CRM, customer usage, and support data."';
 
 const kpiSchema = z.object({
   metric: z.string().min(1),

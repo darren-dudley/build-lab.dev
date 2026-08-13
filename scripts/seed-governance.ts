@@ -4,7 +4,7 @@ import { recordDecision } from "@/server/governance";
 
 const DECISIONS = [
   {
-    name: "Automated QBR deck generation",
+    name: "Automated PMC deck generation",
     input: { decision: "APPROVE", lane: "RAPID_DEPLOYMENT", rationale: "Highest composite in portfolio; fast artifact; strong sponsor pull. Classic rapid-deployment shape." },
   },
   {

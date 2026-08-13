@@ -7,7 +7,7 @@ const PORTFOLIO = {
   BUSINESS_IMPACT: {
     "1": "Convenience for a few individuals; no measurable KPI or P&L movement (e.g. reformatting an internal report)",
     "2": "Time savings for a single team, hard to see beyond their workflow (e.g. drafting routine correspondence)",
-    "3": "Measurable improvement to one function's KPI — hours, cost, or cycle time (e.g. QBR prep from 6 hours to 1)",
+    "3": "Measurable improvement to one function's KPI — hours, cost, or cycle time (e.g. PMC prep from 6 hours to 1)",
     "4": "Moves a company-level metric visible in monthly reporting — revenue, margin, churn, cost line (e.g. +50% claims-appeal capacity)",
     "5": "Changes company economics or competitive position; board-level visibility (e.g. pricing engine adding 1–2 margin points across all quotes)",
   },
@@ -30,7 +30,7 @@ const PORTFOLIO = {
     "2": "Mostly bespoke; only lessons learned carry over to other companies",
     "3": "Pattern usable at 2–3 portfolio companies with meaningful adaptation (same function, different systems)",
     "4": "Template for a common function across many companies with modest configuration (e.g. invoice coding for any NetSuite portco)",
-    "5": "Playbook deployable portfolio-wide in waves; core to the AI value-creation thesis (e.g. QBR generation for every B2B portco)",
+    "5": "Playbook deployable portfolio-wide in waves; core to the AI value-creation thesis (e.g. PMC generation for every B2B portco)",
   },
 };
 

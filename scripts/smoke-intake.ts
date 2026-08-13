@@ -17,26 +17,26 @@ async function main() {
 
   // 3. Autosave in two partial passes (simulates debounced saves)
   await saveDraft(draft.id, requester.id, {
-    name: "SMOKE TEST — QBR automation",
+    name: "SMOKE TEST — PMC automation",
     portfolioCompanyId: company.id,
     functionId: fn.id,
     sponsorName: "Jane Sponsor",
-    businessProblem: "Manual QBR prep takes 6 hours per account.",
+    businessProblem: "Manual PMC prep takes 6 hours per account.",
     currentProcess: "AEs assemble decks by hand from CRM exports.",
   });
   await saveDraft(draft.id, requester.id, {
-    aiTask: "Generate first-pass QBR decks from CRM + usage data.",
-    successDefinition: "80% of QBR decks start from a generated draft.",
+    aiTask: "Generate first-pass PMC decks from CRM + usage data.",
+    successDefinition: "80% of PMC decks start from a generated draft.",
     effortEstimate: "MEDIUM",
     timeToArtifactValue: 3,
     timeToArtifactUnit: "WEEKS",
     onlyOneAnswer: "YES",
     outcomeOwnerName: "VP Sales",
-    kpis: [{ metric: "Hours per QBR", baseline: "6", target: "1.5", noBaseline: false }],
+    kpis: [{ metric: "Hours per PMC", baseline: "6", target: "1.5", noBaseline: false }],
     dataSources: [{ system: "Salesforce", dataType: "CRM records", owner: null, accessStatus: "LIKELY", notes: null }],
   });
   const loaded = await loadDraftData(draft.id);
-  console.log("autosave roundtrip:", loaded.name?.includes("QBR") && loaded.kpis?.length === 1 ? "OK" : "FAIL");
+  console.log("autosave roundtrip:", loaded.name?.includes("PMC") && loaded.kpis?.length === 1 ? "OK" : "FAIL");
 
   // 4. Complete submit succeeds
   res = await submitInitiative(draft.id, requester.id);

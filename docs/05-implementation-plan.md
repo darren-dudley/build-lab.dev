@@ -30,7 +30,7 @@ Vitest suites for: RBAC matrix · workflow transition whitelist (invalid transit
 6. **Specialist Opportunity Quality = composite** (no BC to separate); UI shows single Specialist Priority Score.
 7. **External FDE Pod / Core Transformation lanes** get functional-but-lighter V1 views (project list + overview reuse); command-center depth is Rapid-Deployment-first per spec §33/§37.
 8. **Notifications V1 = in-app only**; the notifications module writes typed events so an email adapter can subscribe later.
-9. **Seed data uses fictional portfolio companies** and realistic AI use cases (QBR generation, sales-call prep, support agent, FP&A variance, contract review, marketing content, recruiting, knowledge search, churn, pricing).
+9. **Seed data uses fictional portfolio companies** and realistic AI use cases (PMC generation, sales-call prep, support agent, FP&A variance, contract review, marketing content, recruiting, knowledge search, churn, pricing).
 10. **"Bootstrap admin"** seeded (admin@build-lab.dev) with a generated password delivered out-of-band; all other seed users get placeholder credentials for evaluation.
 11. **Naming:** product surfaces call the two objects "Initiatives" and "Projects" exactly as spec'd; internal codename "Pipeline" appears nowhere in UI.
 12. **Public intake (Darren, 2026-08-13, supersedes spec §4 for submission only):** submitting an initiative does NOT require login. Public flow at `/submit` — requester enters name/email in the form; anonymous drafts are editable via their unguessable link while in Draft/Needs Information. Everything else (triage, governance, delivery, admin) remains credentialed. Note for later: consider rate limiting/bot protection on the public route (e.g. Vercel BotID) before wide sharing.
