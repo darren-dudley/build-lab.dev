@@ -13,8 +13,47 @@ const companySchema = z.object({
   name: z.string().min(1).max(200),
   sector: z.string().max(200).optional().nullable(),
   fundNumber: z.string().max(50).optional().nullable(),
+  equityCheckUsd: z.number().nonnegative().optional().nullable(),
+  valueUsd: z.number().nonnegative().optional().nullable(),
   isActive: z.boolean().optional(),
 });
+
+/** Derives + appends a BC reference for a company from its financials. */
+async function deriveReferenceFor(companyId: string, actorId: string) {
+  const { deriveBcInputs, DERIVATION_NOTE } = await import("./bc-derive");
+  const { computeBcPriority } = await import("@/server/scoring/engine");
+  const company = await db.portfolioCompany.findUniqueOrThrow({ where: { id: companyId } });
+  if (company.equityCheckUsd == null || company.valueUsd == null) return;
+  const peers = await db.portfolioCompany.findMany({
+    where: { isActive: true, deletedAt: null, equityCheckUsd: { not: null }, valueUsd: { not: null } },
+    select: { equityCheckUsd: true, valueUsd: true },
+  });
+  const inputs = deriveBcInputs({
+    equityCheckUsd: company.equityCheckUsd,
+    valueUsd: company.valueUsd,
+    fundNumber: company.fundNumber,
+    peerChecks: peers.map((p) => p.equityCheckUsd!),
+    peerValues: peers.map((p) => p.valueUsd!),
+  });
+  const latest = await db.investmentPriorityReference.findFirst({
+    where: { companyId },
+    orderBy: { version: "desc" },
+    select: { version: true },
+  });
+  await db.investmentPriorityReference.create({
+    data: {
+      companyId,
+      version: (latest?.version ?? 0) + 1,
+      effectiveDate: new Date(),
+      ...inputs,
+      calculatedPriority: computeBcPriority(
+        inputs.checkSizeScore, inputs.remainingValueScore, inputs.runwayScore,
+      ),
+      adminNotes: DERIVATION_NOTE,
+      createdById: actorId,
+    },
+  });
+}
 
 export async function upsertCompanyAction(companyId: string | null, raw: unknown) {
   const session = await requirePermission("admin.companies");
@@ -22,6 +61,12 @@ export async function upsertCompanyAction(companyId: string | null, raw: unknown
   const company = companyId
     ? await db.portfolioCompany.update({ where: { id: companyId }, data })
     : await db.portfolioCompany.create({ data: { ...data } });
+  // First reference version auto-derives from financials when present
+  const hasReference = await db.investmentPriorityReference.findFirst({
+    where: { companyId: company.id },
+    select: { id: true },
+  });
+  if (!hasReference) await deriveReferenceFor(company.id, session.user.id);
   await db.$transaction((tx) =>
     writeAudit(tx, {
       actorId: session.user.id,
@@ -34,6 +79,77 @@ export async function upsertCompanyAction(companyId: string | null, raw: unknown
   revalidatePath("/admin/companies");
   revalidatePath("/admin/investment-priority");
   return { ok: true as const };
+}
+
+/**
+ * Bulk import from pasted rows (copy out of a spreadsheet or PDF table).
+ * Accepts tab- or comma-separated lines: Name, Fund, Equity Check, Value.
+ * Existing companies (by name) are updated; new ones created. Each imported
+ * company gets a derived BC reference version.
+ */
+export async function importCompaniesAction(pasted: string) {
+  const session = await requirePermission("admin.companies");
+  const text = z.string().min(1).max(100_000).parse(pasted);
+
+  const parseMoney = (s: string) => {
+    const n = Number(s.replace(/[$,\s]/g, ""));
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+
+  const rows: { name: string; fund: string | null; check: number | null; value: number | null }[] = [];
+  const errors: string[] = [];
+  for (const [idx, lineRaw] of text.split("\n").entries()) {
+    const line = lineRaw.trim();
+    if (!line) continue;
+    const parts = line.includes("\t") ? line.split("\t") : line.split(",");
+    const cells = parts.map((p) => p.trim()).filter((p) => p !== "");
+    if (cells.length < 1) continue;
+    if (/^portfolio company$/i.test(cells[0])) continue; // header row
+    const [name, fund, check, value] = [cells[0], cells[1] ?? null, cells[2] ?? null, cells[3] ?? null];
+    if (name.length > 200) {
+      errors.push(`Line ${idx + 1}: name too long`);
+      continue;
+    }
+    rows.push({
+      name,
+      fund,
+      check: check ? parseMoney(check) : null,
+      value: value ? parseMoney(value) : null,
+    });
+  }
+  if (rows.length === 0) return { ok: false as const, errors: ["No rows found", ...errors] };
+
+  let createdCount = 0;
+  let updatedCount = 0;
+  for (const r of rows) {
+    const existing = await db.portfolioCompany.findUnique({ where: { name: r.name } });
+    const data = {
+      fundNumber: r.fund ?? undefined,
+      equityCheckUsd: r.check ?? undefined,
+      valueUsd: r.value ?? undefined,
+      isActive: true,
+    };
+    const company = existing
+      ? await db.portfolioCompany.update({ where: { id: existing.id }, data })
+      : await db.portfolioCompany.create({ data: { name: r.name, ...data } });
+    if (existing) updatedCount++;
+    else createdCount++;
+    if (r.check != null && r.value != null) {
+      await deriveReferenceFor(company.id, session.user.id);
+    }
+  }
+  await db.$transaction((tx) =>
+    writeAudit(tx, {
+      actorId: session.user.id,
+      action: "admin.company.import",
+      entityType: "PORTFOLIO_COMPANY",
+      entityId: "bulk",
+      after: { created: createdCount, updated: updatedCount, errors },
+    }),
+  );
+  revalidatePath("/admin/companies");
+  revalidatePath("/admin/investment-priority");
+  return { ok: true as const, created: createdCount, updated: updatedCount, errors };
 }
 
 /* ───────────────────────── BC Investment Priority ───────────────────────── */

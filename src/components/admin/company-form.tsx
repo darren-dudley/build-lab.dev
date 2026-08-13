@@ -13,13 +13,18 @@ import { upsertCompanyAction } from "@/server/admin/actions";
 export function CompanyForm({
   company,
 }: {
-  company?: { id: string; name: string; sector: string | null; fundNumber: string | null; isActive: boolean };
+  company?: {
+    id: string; name: string; sector: string | null; fundNumber: string | null;
+    equityCheckUsd: number | null; valueUsd: number | null; isActive: boolean;
+  };
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(company?.name ?? "");
   const [sector, setSector] = useState(company?.sector ?? "");
   const [fundNumber, setFundNumber] = useState(company?.fundNumber ?? "");
+  const [equityCheck, setEquityCheck] = useState(company?.equityCheckUsd != null ? String(company.equityCheckUsd) : "");
+  const [value, setValue] = useState(company?.valueUsd != null ? String(company.valueUsd) : "");
   const [isActive, setIsActive] = useState(company?.isActive ?? true);
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
@@ -28,10 +33,16 @@ export function CompanyForm({
     setError(null);
     start(async () => {
       try {
+        const money = (v: string) => {
+          const n = Number(v.replace(/[$,\s]/g, ""));
+          return v.trim() && Number.isFinite(n) && n >= 0 ? n : null;
+        };
         await upsertCompanyAction(company?.id ?? null, {
           name: name.trim(),
           sector: sector.trim() || null,
           fundNumber: fundNumber.trim() || null,
+          equityCheckUsd: money(equityCheck),
+          valueUsd: money(value),
           isActive,
         });
         setOpen(false);
@@ -66,8 +77,16 @@ export function CompanyForm({
             <Input value={sector} onChange={(e) => setSector(e.target.value)} placeholder="e.g. Healthcare Services" />
           </Field>
           <Field label="Fund number">
-            <Input value={fundNumber} onChange={(e) => setFundNumber(e.target.value)} placeholder="e.g. Fund III" />
+            <Input value={fundNumber} onChange={(e) => setFundNumber(e.target.value)} placeholder="e.g. Fund XIV" />
           </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Equity check (USD)">
+              <Input value={equityCheck} onChange={(e) => setEquityCheck(e.target.value)} placeholder="e.g. 250,000,000" />
+            </Field>
+            <Field label="Current value (USD)">
+              <Input value={value} onChange={(e) => setValue(e.target.value)} placeholder="e.g. 600,000,000" />
+            </Field>
+          </div>
           {company ? (
             <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={isActive} onCheckedChange={(c) => setIsActive(c === true)} />

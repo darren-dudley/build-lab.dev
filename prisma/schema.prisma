@@ -58,11 +58,14 @@ model UserRole {
 }
 
 model PortfolioCompany {
-  id         String    @id @default(uuid())
-  name       String    @unique
-  sector     String?
-  fundNumber String?
-  notes      String?
+  id            String    @id @default(uuid())
+  name          String    @unique
+  sector        String?
+  fundNumber    String?
+  /// Whole USD. Source: fund reporting imports (admin-managed).
+  equityCheckUsd Float?
+  valueUsd       Float?
+  notes         String?
   isActive  Boolean   @default(true)
   deletedAt DateTime?
   createdAt DateTime  @default(now())
