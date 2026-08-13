@@ -13,6 +13,10 @@ export default async function AppLayout({
   if (!session?.user) redirect("/login");
 
   const sections = navForRoles(session.user.roles);
+  const { db } = await import("@/server/db");
+  const unreadCount = await db.notification.count({
+    where: { userId: session.user.id, readAt: null },
+  });
 
   return (
     <div className="flex min-h-screen">
@@ -22,7 +26,7 @@ export default async function AppLayout({
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar userName={session.user.name ?? session.user.email ?? ""} />
+        <TopBar userName={session.user.name ?? session.user.email ?? ""} unreadCount={unreadCount} />
         <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
