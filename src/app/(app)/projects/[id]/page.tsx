@@ -7,7 +7,7 @@ import { hasPermission } from "@/server/rbac/permissions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HealthBadge } from "@/components/project/health-badge";
 import { PhaseRail } from "@/components/project/phase-rail";
-import { TaskList } from "@/components/project/task-list";
+import { TasksView } from "@/components/project/tasks-view";
 import { UpdateComposer } from "@/components/project/update-composer";
 import { KpiTable } from "@/components/project/kpi-table";
 import { LANE_LABELS } from "@/lib/lanes";
@@ -173,7 +173,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         </TabsContent>
 
         <TabsContent value="tasks" className="mt-4">
-          <TaskList
+          <TasksView
             projectId={project.id}
             canManage={canManage}
             members={deliveryUsers}

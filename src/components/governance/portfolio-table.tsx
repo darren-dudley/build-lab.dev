@@ -9,7 +9,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { deleteViewAction, saveViewAction } from "@/server/saved-views/actions";
 
 export type PortfolioRow = {
   id: string;
@@ -33,7 +38,19 @@ export type PortfolioRow = {
 type SortKey = "composite" | "opportunityQuality" | "bcPriority" | "name" | "company";
 type GroupKey = "none" | "company" | "functionLabel" | "statusLabel" | "assignment";
 
-export function PortfolioTable({ rows }: { rows: PortfolioRow[] }) {
+export type SavedViewItem = {
+  id: string;
+  name: string;
+  config: Record<string, unknown>;
+};
+
+export function PortfolioTable({
+  rows,
+  savedViews = [],
+}: {
+  rows: PortfolioRow[];
+  savedViews?: SavedViewItem[];
+}) {
   const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey>("composite");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
@@ -44,6 +61,19 @@ export function PortfolioTable({ rows }: { rows: PortfolioRow[] }) {
   const [fStatus, setFStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+
+  function currentConfig() {
+    return { sortKey, sortDir, group, fCompany, fFunction, fType, fStatus };
+  }
+  function applyConfig(c: Record<string, unknown>) {
+    if (typeof c.sortKey === "string") setSortKey(c.sortKey as SortKey);
+    if (c.sortDir === 1 || c.sortDir === -1) setSortDir(c.sortDir);
+    if (typeof c.group === "string") setGroup(c.group as GroupKey);
+    if (typeof c.fCompany === "string") setFCompany(c.fCompany);
+    if (typeof c.fFunction === "string") setFFunction(c.fFunction);
+    if (typeof c.fType === "string") setFType(c.fType);
+    if (typeof c.fStatus === "string") setFStatus(c.fStatus);
+  }
 
   const companies = useMemo(() => [...new Set(rows.map((r) => r.company).filter(Boolean))] as string[], [rows]);
   const functions = useMemo(() => [...new Set(rows.map((r) => r.functionLabel).filter(Boolean))] as string[], [rows]);
@@ -109,6 +139,7 @@ export function PortfolioTable({ rows }: { rows: PortfolioRow[] }) {
           </SelectContent>
         </Select>
         <div className="ml-auto flex items-center gap-2">
+          <ViewsMenu savedViews={savedViews} currentConfig={currentConfig} applyConfig={applyConfig} />
           <span className="text-xs text-muted-foreground">{filtered.length} initiatives</span>
           <Button
             size="sm"
@@ -210,6 +241,62 @@ function GroupRows({
         </tr>
       ))}
     </>
+  );
+}
+
+function ViewsMenu({
+  savedViews, currentConfig, applyConfig,
+}: {
+  savedViews: SavedViewItem[];
+  currentConfig: () => Record<string, unknown>;
+  applyConfig: (c: Record<string, unknown>) => void;
+}) {
+  const router = useRouter();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="outline">Views</Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="text-xs">Saved views</DropdownMenuLabel>
+        {savedViews.length === 0 ? (
+          <div className="px-2 py-1.5 text-xs text-muted-foreground">None saved yet</div>
+        ) : (
+          savedViews.map((v) => (
+            <DropdownMenuItem
+              key={v.id}
+              className="flex justify-between gap-2"
+              onSelect={() => applyConfig(v.config)}
+            >
+              <span className="truncate">{v.name}</span>
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-destructive"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await deleteViewAction(v.id);
+                  router.refresh();
+                }}
+              >
+                ✕
+              </button>
+            </DropdownMenuItem>
+          ))
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={async () => {
+            const name = window.prompt("Name this view (current filters, sort, grouping):");
+            if (name?.trim()) {
+              await saveViewAction("portfolio-ranking", name, currentConfig());
+              router.refresh();
+            }
+          }}
+        >
+          Save current view…
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

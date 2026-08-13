@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/server/auth";
+import { db } from "@/server/db";
 import { hasPermission } from "@/server/rbac/permissions";
 import { getRankedPortfolio } from "@/server/governance";
 import { PortfolioTable, type PortfolioRow } from "@/components/governance/portfolio-table";
@@ -22,7 +23,13 @@ export default async function PortfolioRankingPage() {
   if (!session?.user) redirect("/login");
   if (!hasPermission(session.user.roles, "governance.viewRanking")) redirect("/home");
 
-  const portfolio = await getRankedPortfolio();
+  const [portfolio, savedViews] = await Promise.all([
+    getRankedPortfolio(),
+    db.savedView.findMany({
+      where: { userId: session.user.id, tableKey: "portfolio-ranking" },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
   const rows: PortfolioRow[] = portfolio.map((i) => {
     const s = i.scores[0]!;
@@ -55,7 +62,14 @@ export default async function PortfolioRankingPage() {
           this view but are not economically comparable — the type badge stays visible.
         </p>
       </div>
-      <PortfolioTable rows={rows} />
+      <PortfolioTable
+        rows={rows}
+        savedViews={savedViews.map((v) => ({
+          id: v.id,
+          name: v.name,
+          config: v.config as Record<string, unknown>,
+        }))}
+      />
     </div>
   );
 }

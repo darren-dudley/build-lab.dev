@@ -3,6 +3,7 @@ import { auth } from "@/server/auth";
 import { navForRoles } from "@/components/shell/nav-config";
 import { SideNav } from "@/components/shell/side-nav";
 import { TopBar } from "@/components/shell/top-bar";
+import { CommandPalette } from "@/components/shell/command-palette";
 
 export default async function AppLayout({
   children,
@@ -29,6 +30,7 @@ export default async function AppLayout({
         <TopBar userName={session.user.name ?? session.user.email ?? ""} unreadCount={unreadCount} />
         <main className="flex-1 p-6">{children}</main>
       </div>
+      <CommandPalette sections={sections} />
     </div>
   );
 }

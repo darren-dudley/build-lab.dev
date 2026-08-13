@@ -10,7 +10,14 @@ export function TopBar({ userName, unreadCount = 0 }: { userName: string; unread
 
   return (
     <header className="flex h-12 items-center justify-between border-b px-4">
-      <div className="text-sm text-muted-foreground" />
+      <button
+        type="button"
+        className="hidden items-center gap-2 rounded-md border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent sm:flex"
+        data-command-trigger
+      >
+        Search
+        <kbd className="rounded border bg-muted px-1 font-mono text-[10px]">⌘K</kbd>
+      </button>
       <div className="flex items-center gap-3">
         <Link
           href="/notifications"

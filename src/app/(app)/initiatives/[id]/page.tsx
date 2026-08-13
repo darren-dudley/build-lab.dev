@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { hasPermission } from "@/server/rbac";
 import { StatusBadge } from "@/components/initiative/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CommentThread } from "@/components/shared/comment-thread";
 import { format } from "date-fns";
 import { REQUEST_TYPES, ACCESS_STATUS_OPTIONS } from "@/lib/intake-schema";
 
@@ -46,6 +47,12 @@ export default async function InitiativeDetailPage({
   const isOwner = initiative.requesterId === session.user.id;
   const internal = hasPermission(session.user.roles, "initiative.viewAll");
   if (!isOwner && !internal) notFound();
+
+  const comments = await db.comment.findMany({
+    where: { entityType: "INITIATIVE", entityId: id, deletedAt: null },
+    orderBy: { createdAt: "asc" },
+    include: { author: { select: { name: true } } },
+  });
 
   const r = initiative.intakeResponse;
   const requestTypeLabel = REQUEST_TYPES.find((t) => t.value === initiative.requestType)?.label;
@@ -92,6 +99,9 @@ export default async function InitiativeDetailPage({
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="intake">Intake</TabsTrigger>
+          <TabsTrigger value="discussion">
+            Discussion{comments.length ? ` (${comments.length})` : ""}
+          </TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
@@ -176,6 +186,19 @@ export default async function InitiativeDetailPage({
           <Section title="Only initiative this quarter?"
             body={r?.onlyOneAnswer ? `${r.onlyOneAnswer}${r.onlyOneWhy ? ` — ${r.onlyOneWhy}` : ""}` : null} />
           <Section title="Additional context" body={r?.finalContext} />
+        </TabsContent>
+
+        <TabsContent value="discussion" className="mt-4">
+          <CommentThread
+            entityType="INITIATIVE"
+            entityId={initiative.id}
+            comments={comments.map((c) => ({
+              id: c.id,
+              authorName: c.author.name,
+              body: c.body,
+              createdAt: c.createdAt.toISOString(),
+            }))}
+          />
         </TabsContent>
 
         <TabsContent value="activity" className="mt-4">
