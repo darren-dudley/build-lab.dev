@@ -58,10 +58,11 @@ model UserRole {
 }
 
 model PortfolioCompany {
-  id        String    @id @default(uuid())
-  name      String    @unique
-  sector    String?
-  notes     String?
+  id         String    @id @default(uuid())
+  name       String    @unique
+  sector     String?
+  fundNumber String?
+  notes      String?
   isActive  Boolean   @default(true)
   deletedAt DateTime?
   createdAt DateTime  @default(now())
