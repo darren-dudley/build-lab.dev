@@ -18,7 +18,7 @@ export default async function InvestmentPriorityPage() {
   if (!hasPermission(session.user.roles, "admin.investmentPriority")) redirect("/home");
 
   const companies = await db.portfolioCompany.findMany({
-    where: { deletedAt: null, isActive: true },
+    where: { deletedAt: null, isActive: true, exitedAt: null },
     orderBy: { name: "asc" },
     include: {
       investmentRefs: { orderBy: [{ effectiveDate: "desc" }, { version: "desc" }] },

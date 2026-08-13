@@ -16,6 +16,7 @@ const companySchema = z.object({
   equityCheckUsd: z.number().nonnegative().optional().nullable(),
   valueUsd: z.number().nonnegative().optional().nullable(),
   isActive: z.boolean().optional(),
+  exited: z.boolean().optional(),
 });
 
 /** Derives + appends a BC reference for a company from its financials. */
@@ -25,7 +26,7 @@ async function deriveReferenceFor(companyId: string, actorId: string) {
   const company = await db.portfolioCompany.findUniqueOrThrow({ where: { id: companyId } });
   if (company.equityCheckUsd == null || company.valueUsd == null) return;
   const peers = await db.portfolioCompany.findMany({
-    where: { isActive: true, deletedAt: null, equityCheckUsd: { not: null }, valueUsd: { not: null } },
+    where: { isActive: true, deletedAt: null, exitedAt: null, equityCheckUsd: { not: null }, valueUsd: { not: null } },
     select: { equityCheckUsd: true, valueUsd: true },
   });
   const inputs = deriveBcInputs({
@@ -57,10 +58,11 @@ async function deriveReferenceFor(companyId: string, actorId: string) {
 
 export async function upsertCompanyAction(companyId: string | null, raw: unknown) {
   const session = await requirePermission("admin.companies");
-  const data = companySchema.parse(raw);
+  const { exited, ...data } = companySchema.parse(raw);
+  const exitData = exited === undefined ? {} : { exitedAt: exited ? new Date() : null };
   const company = companyId
-    ? await db.portfolioCompany.update({ where: { id: companyId }, data })
-    : await db.portfolioCompany.create({ data: { ...data } });
+    ? await db.portfolioCompany.update({ where: { id: companyId }, data: { ...data, ...exitData } })
+    : await db.portfolioCompany.create({ data: { ...data, ...exitData } });
   // First reference version auto-derives from financials when present
   const hasReference = await db.investmentPriorityReference.findFirst({
     where: { companyId: company.id },

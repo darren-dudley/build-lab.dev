@@ -8,12 +8,17 @@
  * - Runway score: fund vintage (older fund = shorter runway)
  */
 
+/**
+ * Newer funds have materially longer value-creation runway (confirmed by
+ * Darren 2026-08-13: newer-fund companies are prioritized). Equal vintage
+ * steps across the active funds, spread over the full 1–5 range.
+ */
 export function fundRunwayScore(fund: string | null | undefined): number {
   const f = (fund ?? "").toUpperCase();
   if (f.includes("XIV")) return 5;
   if (f.includes("XIII")) return 4;
-  if (f.includes("XII")) return 3;
-  if (f.includes("XI")) return 2;
+  if (f.includes("XII")) return 2;
+  if (f.includes("XI")) return 1;
   return 3;
 }
 

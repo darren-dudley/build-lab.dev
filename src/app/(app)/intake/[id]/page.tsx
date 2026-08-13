@@ -26,7 +26,7 @@ export default async function IntakeDraftPage({
 
   const [companies, functions, workflows, systems, initial] = await Promise.all([
     db.portfolioCompany.findMany({
-      where: { isActive: true, deletedAt: null },
+      where: { isActive: true, deletedAt: null, exitedAt: null },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),

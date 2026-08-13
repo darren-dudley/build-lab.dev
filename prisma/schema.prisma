@@ -65,6 +65,9 @@ model PortfolioCompany {
   /// Whole USD. Source: fund reporting imports (admin-managed).
   equityCheckUsd Float?
   valueUsd       Float?
+  /// Set when the position has been exited — hides the company from new
+  /// intake, Investment Priority, and quintile derivation; history remains.
+  exitedAt      DateTime?
   notes         String?
   isActive  Boolean   @default(true)
   deletedAt DateTime?

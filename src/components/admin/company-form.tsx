@@ -15,7 +15,7 @@ export function CompanyForm({
 }: {
   company?: {
     id: string; name: string; sector: string | null; fundNumber: string | null;
-    equityCheckUsd: number | null; valueUsd: number | null; isActive: boolean;
+    equityCheckUsd: number | null; valueUsd: number | null; isActive: boolean; exited: boolean;
   };
 }) {
   const router = useRouter();
@@ -26,6 +26,7 @@ export function CompanyForm({
   const [equityCheck, setEquityCheck] = useState(company?.equityCheckUsd != null ? String(company.equityCheckUsd) : "");
   const [value, setValue] = useState(company?.valueUsd != null ? String(company.valueUsd) : "");
   const [isActive, setIsActive] = useState(company?.isActive ?? true);
+  const [exited, setExited] = useState(company?.exited ?? false);
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
 
@@ -44,6 +45,7 @@ export function CompanyForm({
           equityCheckUsd: money(equityCheck),
           valueUsd: money(value),
           isActive,
+          exited,
         });
         setOpen(false);
         if (!company) { setName(""); setSector(""); setFundNumber(""); }
@@ -88,10 +90,17 @@ export function CompanyForm({
             </Field>
           </div>
           {company ? (
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={isActive} onCheckedChange={(c) => setIsActive(c === true)} />
-              Active (available for new initiatives)
-            </label>
+            <div className="space-y-1.5">
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={isActive} onCheckedChange={(c) => setIsActive(c === true)} />
+                Active (available for new initiatives)
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox checked={exited} onCheckedChange={(c) => setExited(c === true)} />
+                Exited — position realized; hidden from intake, Investment
+                Priority, and portfolio calculations (history remains)
+              </label>
+            </div>
           ) : null}
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex justify-end gap-2">

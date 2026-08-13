@@ -14,13 +14,20 @@ function money(v: number | null): string {
   return `$${Math.round(v).toLocaleString()}`;
 }
 
-export default async function CompaniesAdminPage() {
+export default async function CompaniesAdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ exited?: string }>;
+}) {
+  const { exited: showExitedParam } = await searchParams;
+  const showExited = showExitedParam === "1";
   const session = await auth();
   if (!session?.user) redirect("/login");
   if (!hasPermission(session.user.roles, "admin.companies")) redirect("/home");
 
+  const exitedCount = await db.portfolioCompany.count({ where: { deletedAt: null, exitedAt: { not: null } } });
   const companies = await db.portfolioCompany.findMany({
-    where: { deletedAt: null },
+    where: { deletedAt: null, ...(showExited ? {} : { exitedAt: null }) },
     orderBy: { name: "asc" },
     include: {
       _count: { select: { initiatives: true } },
@@ -36,7 +43,15 @@ export default async function CompaniesAdminPage() {
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold tracking-tight">Portfolio Companies</h1>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          {exitedCount > 0 ? (
+            <a
+              href={showExited ? "/admin/companies" : "/admin/companies?exited=1"}
+              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+            >
+              {showExited ? "Hide exited" : `Show exited (${exitedCount})`}
+            </a>
+          ) : null}
           <ImportCompaniesDialog />
           <CompanyForm />
         </div>
@@ -71,14 +86,16 @@ export default async function CompaniesAdminPage() {
                     )}
                   </td>
                   <td className="px-3 py-2">
-                    {c.isActive ? (
+                    {c.exitedAt ? (
+                      <span className="text-xs font-medium text-muted-foreground">Exited</span>
+                    ) : c.isActive ? (
                       <span className="text-xs text-green-700 dark:text-green-400">Active</span>
                     ) : (
                       <span className="text-xs text-muted-foreground">Inactive</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <CompanyForm company={{ id: c.id, name: c.name, sector: c.sector, fundNumber: c.fundNumber, equityCheckUsd: c.equityCheckUsd, valueUsd: c.valueUsd, isActive: c.isActive }} />
+                    <CompanyForm company={{ id: c.id, name: c.name, sector: c.sector, fundNumber: c.fundNumber, equityCheckUsd: c.equityCheckUsd, valueUsd: c.valueUsd, isActive: c.isActive, exited: c.exitedAt != null }} />
                   </td>
                 </tr>
               );
