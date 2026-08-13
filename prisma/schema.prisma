@@ -1,0 +1,801 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────── Identity & reference ───────────────────────────
+
+enum RoleType {
+  REQUESTER
+  TRIAGE
+  GOVERNANCE
+  DELIVERY
+  ADMIN
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  title        String?
+  passwordHash String
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  roles                UserRole[]
+  initiativesRequested Initiative[]          @relation("requester")
+  triageReviews        TriageReview[]
+  scores               InitiativeScore[]
+  decisionsMade        GovernanceDecisionMaker[]
+  assignmentsMade      DeliveryAssignment[]
+  projectsLed          Project[]             @relation("lead")
+  projectMemberships   ProjectMember[]
+  tasksOwned           Task[]
+  projectUpdates       ProjectUpdate[]
+  comments             Comment[]
+  notifications        Notification[]
+  savedViews           SavedView[]
+  auditEvents          AuditEvent[]
+  statusTransitions    StatusTransition[]
+  flagsAdded           InitiativeFlag[]
+  activityEvents       ActivityEvent[]
+  investmentRefsCreated InvestmentPriorityReference[]
+  scoringVersionsCreated ScoringModelVersion[]
+}
+
+model UserRole {
+  id     String   @id @default(uuid())
+  userId String
+  role   RoleType
+  user   User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, role])
+}
+
+model PortfolioCompany {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  sector    String?
+  notes     String?
+  isActive  Boolean   @default(true)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  initiatives    Initiative[]
+  investmentRefs InvestmentPriorityReference[]
+}
+
+enum TaxonomyKind {
+  FUNCTION
+  VALUE_LEVER
+  SYSTEM
+  SPECIALIST_WORKFLOW
+  TAG
+}
+
+model TaxonomyItem {
+  id        String       @id @default(uuid())
+  kind      TaxonomyKind
+  label     String
+  sortOrder Int          @default(0)
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  initiativesFunction Initiative[]       @relation("function")
+  initiativeSystems   InitiativeSystem[]
+  initiativeTags      InitiativeTag[]
+
+  @@unique([kind, label])
+  @@index([kind, isActive])
+}
+
+// ─────────────────────────── Initiative core ───────────────────────────
+
+enum RequestType {
+  SPECIALIST_SPECIALIST
+  SPECIALIST_PORTCO
+  GENERALIST_PORTCO
+}
+
+enum InitiativeStatus {
+  DRAFT
+  SUBMITTED
+  NEEDS_INFORMATION
+  TRIAGE
+  READY_FOR_GOVERNANCE
+  GOVERNANCE_REVIEW
+  APPROVED_AWAITING_CAPACITY
+  APPROVED_SCHEDULED
+  IN_DELIVERY
+  DEPLOYED
+  MEASURING_IMPACT
+  COMPLETED
+  DEFERRED
+  REJECTED
+  CANCELLED
+}
+
+enum EffortEstimate {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+model Initiative {
+  id                 String           @id @default(uuid())
+  requestType        RequestType
+  name               String
+  status             InitiativeStatus @default(DRAFT)
+  requesterId        String
+  portfolioCompanyId String?
+  functionId         String?
+  submittedAt        DateTime?
+  deletedAt          DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  requester        User              @relation("requester", fields: [requesterId], references: [id])
+  portfolioCompany PortfolioCompany? @relation(fields: [portfolioCompanyId], references: [id])
+  function         TaxonomyItem?     @relation("function", fields: [functionId], references: [id])
+
+  intakeResponse    IntakeResponse?
+  sponsor           Sponsor?
+  businessOwner     BusinessOwner?
+  dataSources       InitiativeDataSource[]
+  systems           InitiativeSystem[]
+  kpis              InitiativeKPI[]
+  flags             InitiativeFlag[]
+  tags              InitiativeTag[]
+  statusTransitions StatusTransition[]
+  triageReview      TriageReview?
+  scores            InitiativeScore[]
+  governanceDecisions GovernanceDecision[]
+  deliveryAssignment  DeliveryAssignment?
+  project           Project?
+  activityEvents    ActivityEvent[]
+
+  @@index([status])
+  @@index([requesterId])
+  @@index([portfolioCompanyId])
+  @@index([requestType, status])
+}
+
+/// Immutable requester submission. Structured answers stored as typed columns
+/// where filtering/scoring needs them, full step payloads as JSON. Locked at
+/// submission; editable only while DRAFT or NEEDS_INFORMATION.
+model IntakeResponse {
+  id           String     @id @default(uuid())
+  initiativeId String     @unique
+  initiative   Initiative @relation(fields: [initiativeId], references: [id])
+
+  businessProblem     String?
+  currentProcess      String?
+  affected            Json? // structured selections + explanation
+  aiTask              String?
+  successDefinition   String?
+  valueCreation       Json? // value levers [portfolio] or workflow change [specialist]
+  effortEstimate      EffortEstimate?
+  priorAttempts       String? // NO | INTERNAL | VENDOR | CONSULTANT | MULTIPLE | UNKNOWN
+  priorAttemptsDetail String?
+  timeToArtifactValue Int?
+  timeToArtifactUnit  String? // DAYS | WEEKS | MONTHS
+  onlyOneAnswer       String? // YES | NO | UNSURE
+  onlyOneWhy          String?
+  forcingEventDate    DateTime?
+  forcingEvent        String?
+  forcingConsequence  String?
+  outcomeOwnerName    String?
+  outcomeOwnerTitle   String?
+  finalContext        String?
+  specialistWorkflow  String?
+  stepProgress        Json? // step completion markers for draft resume
+  lockedAt            DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Sponsor {
+  id           String     @id @default(uuid())
+  initiativeId String     @unique
+  initiative   Initiative @relation(fields: [initiativeId], references: [id])
+  name         String
+  title        String?
+  email        String?
+  confirmed    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model BusinessOwner {
+  id           String     @id @default(uuid())
+  initiativeId String     @unique
+  initiative   Initiative @relation(fields: [initiativeId], references: [id])
+  name         String
+  title        String?
+  email        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+enum DataAccessStatus {
+  CONFIRMED
+  LIKELY
+  UNCONFIRMED
+  UNKNOWN
+}
+
+model InitiativeDataSource {
+  id           String           @id @default(uuid())
+  initiativeId String
+  initiative   Initiative       @relation(fields: [initiativeId], references: [id])
+  system       String
+  dataType     String?
+  owner        String?
+  accessStatus DataAccessStatus @default(UNKNOWN)
+  notes        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([initiativeId])
+}
+
+model InitiativeSystem {
+  id           String       @id @default(uuid())
+  initiativeId String
+  initiative   Initiative   @relation(fields: [initiativeId], references: [id])
+  systemId     String?
+  system       TaxonomyItem? @relation(fields: [systemId], references: [id])
+  otherLabel   String?
+
+  @@index([initiativeId])
+}
+
+model InitiativeKPI {
+  id           String     @id @default(uuid())
+  initiativeId String
+  initiative   Initiative @relation(fields: [initiativeId], references: [id])
+  metric       String
+  baseline     String?
+  target       String?
+  noBaseline   Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  projectKpis ProjectKPI[]
+
+  @@index([initiativeId])
+}
+
+enum FlagType {
+  SENSITIVE_DATA
+  SECURITY_REVIEW_REQUIRED
+  DATA_ACCESS_UNCONFIRMED
+  SPONSOR_UNCONFIRMED
+  THIRD_PARTY_DEPENDENCY
+  SIGNIFICANT_CHANGE_MANAGEMENT
+  EXISTING_REUSABLE_SOLUTION
+  SIMILAR_REQUESTS_EXIST
+  EXECUTIVE_DEADLINE
+  MEASUREMENT_BASELINE_MISSING
+}
+
+model InitiativeFlag {
+  id           String     @id @default(uuid())
+  initiativeId String
+  initiative   Initiative @relation(fields: [initiativeId], references: [id])
+  flagType     FlagType
+  note         String?
+  addedById    String
+  addedBy      User       @relation(fields: [addedById], references: [id])
+  resolvedAt   DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([initiativeId, flagType])
+  @@index([initiativeId])
+}
+
+model InitiativeTag {
+  id           String       @id @default(uuid())
+  initiativeId String
+  initiative   Initiative   @relation(fields: [initiativeId], references: [id])
+  tagId        String
+  tag          TaxonomyItem @relation(fields: [tagId], references: [id])
+
+  @@unique([initiativeId, tagId])
+}
+
+/// Append-only workflow history.
+model StatusTransition {
+  id           String           @id @default(uuid())
+  initiativeId String
+  initiative   Initiative       @relation(fields: [initiativeId], references: [id])
+  fromStatus   InitiativeStatus
+  toStatus     InitiativeStatus
+  actorId      String
+  actor        User             @relation(fields: [actorId], references: [id])
+  note         String?
+  createdAt    DateTime         @default(now())
+
+  @@index([initiativeId, createdAt])
+}
+
+// ─────────────────────────── Triage & scoring ───────────────────────────
+
+/// Triage normalization — stored separately; the IntakeResponse stays immutable.
+model TriageReview {
+  id                String     @id @default(uuid())
+  initiativeId      String     @unique
+  initiative        Initiative @relation(fields: [initiativeId], references: [id])
+  reviewerId        String
+  reviewer          User       @relation(fields: [reviewerId], references: [id])
+  normalizedName    String?
+  normalizedProblem String?
+  normalizedAsk     String?
+  internalNotes     String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+enum ScoringModelType {
+  PORTFOLIO
+  SPECIALIST
+}
+
+enum ScoreDimension {
+  BUSINESS_IMPACT
+  TIME_TO_ARTIFACT
+  DATA_FEASIBILITY
+  SPONSORSHIP
+  STRATEGIC_FIT
+}
+
+model ScoringModel {
+  id        String           @id @default(uuid())
+  modelType ScoringModelType @unique
+  name      String
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  versions ScoringModelVersion[]
+}
+
+/// Versioned config: weights (points per dimension) + rubric text per dimension.
+/// Editing config creates a new version; versions are never mutated.
+model ScoringModelVersion {
+  id          String       @id @default(uuid())
+  modelId     String
+  model       ScoringModel @relation(fields: [modelId], references: [id])
+  version     Int
+  weights     Json // { BUSINESS_IMPACT: 17, ..., BC_INVESTMENT_PRIORITY?: 35 }
+  rubrics     Json // { BUSINESS_IMPACT: { "1": "...", ... "5": "..." }, ... }
+  effectiveAt DateTime     @default(now())
+  createdById String
+  createdBy   User         @relation(fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+
+  scores InitiativeScore[]
+
+  @@unique([modelId, version])
+}
+
+/// Append-only quarterly BC Investment Priority reference data.
+model InvestmentPriorityReference {
+  id                  String           @id @default(uuid())
+  companyId           String
+  company             PortfolioCompany @relation(fields: [companyId], references: [id])
+  effectiveDate       DateTime
+  version             Int
+  checkSizeScore      Int // 1–5
+  remainingValueScore Int // 1–5
+  runwayScore         Int // 1–5
+  calculatedPriority  Float // simple average
+  adminNotes          String?
+  createdById         String
+  createdBy           User             @relation(fields: [createdById], references: [id])
+  createdAt           DateTime         @default(now())
+
+  scores InitiativeScore[]
+
+  @@unique([companyId, version])
+  @@index([companyId, effectiveDate])
+}
+
+/// Append-only. Re-scoring adds a row; isCurrent moves.
+model InitiativeScore {
+  id                 String              @id @default(uuid())
+  initiativeId       String
+  initiative         Initiative          @relation(fields: [initiativeId], references: [id])
+  modelVersionId     String
+  modelVersion       ScoringModelVersion @relation(fields: [modelVersionId], references: [id])
+  scorerId           String
+  scorer             User                @relation(fields: [scorerId], references: [id])
+  scoredAt           DateTime            @default(now())
+  compositeScore     Int // 0–100
+  opportunityQuality Int // 0–100
+  bcPriority         Float? // 1–5, portfolio only
+  investmentPriorityReferenceId String?
+  investmentPriorityReference   InvestmentPriorityReference? @relation(fields: [investmentPriorityReferenceId], references: [id])
+  isCurrent          Boolean             @default(true)
+
+  components ScoreComponent[]
+
+  @@index([initiativeId, isCurrent])
+}
+
+model ScoreComponent {
+  id        String          @id @default(uuid())
+  scoreId   String
+  score     InitiativeScore @relation(fields: [scoreId], references: [id])
+  dimension ScoreDimension
+  value     Int // 1–5
+  rationale String?
+
+  @@unique([scoreId, dimension])
+}
+
+// ─────────────────────────── Governance & capacity ───────────────────────────
+
+enum GovernanceDecisionType {
+  APPROVE
+  APPROVE_AWAITING_CAPACITY
+  DEFER
+  MORE_INFORMATION
+  REJECT
+}
+
+enum DeliveryLane {
+  RAPID_DEPLOYMENT
+  EXTERNAL_FDE_POD
+  CORE_TRANSFORMATION
+}
+
+model GovernanceDecision {
+  id                    String                 @id @default(uuid())
+  initiativeId          String
+  initiative            Initiative             @relation(fields: [initiativeId], references: [id])
+  decision              GovernanceDecisionType
+  decidedAt             DateTime               @default(now())
+  rationale             String?
+  conditions            String?
+  priorityNotes         String?
+  reconsiderAt          DateTime?
+  anticipatedLane       DeliveryLane? // label only — non-operative
+  isCurrent             Boolean                @default(true)
+
+  makers GovernanceDecisionMaker[]
+
+  @@index([initiativeId, isCurrent])
+}
+
+model GovernanceDecisionMaker {
+  id         String             @id @default(uuid())
+  decisionId String
+  decision   GovernanceDecision @relation(fields: [decisionId], references: [id])
+  userId     String
+  user       User               @relation(fields: [userId], references: [id])
+
+  @@unique([decisionId, userId])
+}
+
+/// Only ever created by explicit human action of a governance-permitted user.
+model DeliveryAssignment {
+  id           String       @id @default(uuid())
+  initiativeId String       @unique
+  initiative   Initiative   @relation(fields: [initiativeId], references: [id])
+  lane         DeliveryLane
+  assignedById String
+  assignedBy   User         @relation(fields: [assignedById], references: [id])
+  assignedAt   DateTime     @default(now())
+  note         String?
+}
+
+model CapacitySetting {
+  id       String       @id @default(uuid())
+  lane     DeliveryLane @unique
+  capacity Int
+  updatedAt DateTime    @updatedAt
+}
+
+// ─────────────────────────── Projects & execution ───────────────────────────
+
+enum ProjectStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectHealth {
+  GREEN
+  YELLOW
+  RED
+}
+
+model PhaseTemplate {
+  id        String       @id @default(uuid())
+  lane      DeliveryLane
+  name      String
+  sortOrder Int
+  isActive  Boolean      @default(true)
+
+  @@unique([lane, sortOrder])
+}
+
+model Project {
+  id                   String        @id @default(uuid())
+  initiativeId         String        @unique
+  initiative           Initiative    @relation(fields: [initiativeId], references: [id])
+  name                 String
+  lane                 DeliveryLane
+  status               ProjectStatus @default(ACTIVE)
+  leadId               String?
+  lead                 User?         @relation("lead", fields: [leadId], references: [id])
+  health               ProjectHealth @default(GREEN)
+  healthNote           String?
+  currentPhaseId       String?       @unique
+  currentPhase         ProjectPhase? @relation("currentPhase", fields: [currentPhaseId], references: [id])
+  targetDeploymentDate DateTime?
+  startedAt            DateTime      @default(now())
+  completedAt          DateTime?
+  deletedAt            DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  members    ProjectMember[]
+  phases     ProjectPhase[]
+  tasks      Task[]
+  milestones Milestone[]
+  updates    ProjectUpdate[]
+  risks     Risk[]
+  decisions Decision[]
+  kpis       ProjectKPI[]
+  activityEvents ActivityEvent[]
+
+  @@index([lane, status])
+}
+
+model ProjectMember {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  role      String?
+
+  @@unique([projectId, userId])
+}
+
+model ProjectPhase {
+  id          String    @id @default(uuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  name        String
+  sortOrder   Int
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  currentFor Project? @relation("currentPhase")
+  tasks      Task[]
+  milestones Milestone[]
+
+  @@unique([projectId, sortOrder])
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  WAITING
+  BLOCKED
+  COMPLETE
+  CANCELLED
+}
+
+model Task {
+  id               String     @id @default(uuid())
+  projectId        String
+  project          Project    @relation(fields: [projectId], references: [id])
+  name             String
+  ownerId          String?
+  owner            User?      @relation(fields: [ownerId], references: [id])
+  status           TaskStatus @default(NOT_STARTED)
+  dueDate          DateTime?
+  description      String?
+  priority         String? // LOW | MEDIUM | HIGH
+  phaseId          String?
+  phase            ProjectPhase? @relation(fields: [phaseId], references: [id])
+  dependencyTaskId String?
+  dependencyTask   Task?      @relation("dependency", fields: [dependencyTaskId], references: [id])
+  dependents       Task[]     @relation("dependency")
+  blockerNote      String?
+  sortOrder        Int        @default(0)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([projectId, status])
+  @@index([ownerId, status])
+}
+
+model Milestone {
+  id          String        @id @default(uuid())
+  projectId   String
+  project     Project       @relation(fields: [projectId], references: [id])
+  name        String
+  targetDate  DateTime?
+  completedAt DateTime?
+  phaseId     String?
+  phase       ProjectPhase? @relation(fields: [phaseId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([projectId])
+}
+
+/// Recurring status updates — chronological history.
+model ProjectUpdate {
+  id              String        @id @default(uuid())
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id])
+  authorId        String
+  author          User          @relation(fields: [authorId], references: [id])
+  accomplished    String?
+  next            String?
+  risks           String?
+  decisionsNeeded String?
+  kpiUpdate       String?
+  healthAtTime    ProjectHealth
+  createdAt       DateTime      @default(now())
+
+  @@index([projectId, createdAt])
+}
+
+model Risk {
+  id        String    @id @default(uuid())
+  projectId String
+  project   Project   @relation(fields: [projectId], references: [id])
+  title     String
+  detail    String?
+  severity  String? // LOW | MEDIUM | HIGH
+  status    String    @default("OPEN") // OPEN | MITIGATED | CLOSED
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Decision {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  title     String
+  detail    String?
+  decidedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum KpiValueType {
+  ESTIMATED
+  VALIDATED
+}
+
+enum KpiCategory {
+  HOURS_SAVED
+  COST_SAVINGS
+  REVENUE_IMPACT
+  MARGIN_IMPACT
+  PRODUCTIVITY
+  OTHER
+}
+
+model ProjectKPI {
+  id              String        @id @default(uuid())
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id])
+  initiativeKpiId String?
+  initiativeKpi   InitiativeKPI? @relation(fields: [initiativeKpiId], references: [id])
+  metric          String
+  baseline        String?
+  target          String?
+  currentResult   String?
+  measuredAt      DateTime?
+  methodology     String?
+  valueType       KpiValueType  @default(ESTIMATED)
+  category        KpiCategory   @default(OTHER)
+  numericValue    Float? // normalized value for analytics where quantifiable
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([projectId])
+}
+
+// ─────────────────────────── Collaboration & system ───────────────────────────
+
+enum EntityType {
+  INITIATIVE
+  PROJECT
+  TASK
+}
+
+model Comment {
+  id         String     @id @default(uuid())
+  entityType EntityType
+  entityId   String
+  authorId   String
+  author     User       @relation(fields: [authorId], references: [id])
+  body       String
+  mentions   Json? // array of user IDs
+  deletedAt  DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([entityType, entityId, createdAt])
+}
+
+/// Curated activity feed (not raw audit): submission, score, status, decision,
+/// assignment, project start, milestone, health change, KPI update.
+model ActivityEvent {
+  id           String      @id @default(uuid())
+  initiativeId String?
+  initiative   Initiative? @relation(fields: [initiativeId], references: [id])
+  projectId    String?
+  project      Project?    @relation(fields: [projectId], references: [id])
+  actorId      String?
+  actor        User?       @relation(fields: [actorId], references: [id])
+  eventType    String
+  summary      String
+  meta         Json?
+  createdAt    DateTime    @default(now())
+
+  @@index([initiativeId, createdAt])
+  @@index([projectId, createdAt])
+}
+
+model Notification {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  type       String
+  title      String
+  body       String?
+  entityType EntityType?
+  entityId   String?
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model SavedView {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  tableKey  String // e.g. "triage-queue", "portfolio-ranking"
+  name      String
+  config    Json // { filters, sort, grouping, columns }
+  teamScope String? // null = personal; reserved for shared views later
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, tableKey])
+}
+
+/// Append-only audit log, written in-transaction with the mutation it records.
+model AuditEvent {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String // e.g. "initiative.submit", "score.create", "governance.decide"
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+}
