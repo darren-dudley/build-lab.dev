@@ -76,6 +76,14 @@ export async function requestInformationAction(initiativeId: string, message: st
   return { ok: true as const };
 }
 
+/** AI-drafted score suggestions — prefill only; humans review and save. */
+export async function suggestScoresAction(initiativeId: string) {
+  await requirePermission("triage.score");
+  const { suggestScores } = await import("@/server/ai/suggest-scores");
+  const suggestions = await suggestScores(initiativeId);
+  return { ok: true as const, suggestions };
+}
+
 export async function markReadyAction(initiativeId: string) {
   const session = await requirePermission("triage.review");
   await markReadyForGovernance({ initiativeId, actorId: session.user.id });

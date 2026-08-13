@@ -14,7 +14,7 @@ import {
 import { DIMENSION_LABELS, FLAG_LABELS } from "@/lib/labels";
 import {
   markReadyAction, requestInformationAction, saveTriageReviewAction,
-  scoreInitiativeAction, setFlagAction,
+  scoreInitiativeAction, setFlagAction, suggestScoresAction,
 } from "@/server/triage/actions";
 
 const DIMENSIONS: ScoreDimension[] = [
@@ -73,7 +73,30 @@ export function ScoringPanel(props: Props) {
   const [infoMessage, setInfoMessage] = useState("");
   const [showInfoBox, setShowInfoBox] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiState, setAiState] = useState<"idle" | "drafting" | "drafted">("idle");
+  const [aiCaveats, setAiCaveats] = useState<string | null>(null);
   const [busy, start] = useTransition();
+
+  function draftWithAi() {
+    setError(null);
+    setAiState("drafting");
+    start(async () => {
+      try {
+        const r = await suggestScoresAction(props.initiativeId);
+        setValues(Object.fromEntries(
+          Object.entries(r.suggestions.scores).map(([d, s]) => [d, s.value]),
+        ));
+        setRationales(Object.fromEntries(
+          Object.entries(r.suggestions.scores).map(([d, s]) => [d, s.rationale]),
+        ));
+        setAiCaveats(r.suggestions.caveats || null);
+        setAiState("drafted");
+      } catch (e) {
+        setAiState("idle");
+        setError(e instanceof Error ? e.message : "AI drafting failed — score manually");
+      }
+    });
+  }
 
   const complete = DIMENSIONS.every((d) => values[d]);
 
@@ -139,7 +162,27 @@ export function ScoringPanel(props: Props) {
 
       {/* Scoring */}
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold">Score</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold">Score</h2>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy || aiState === "drafting"}
+            onClick={draftWithAi}
+          >
+            {aiState === "drafting" ? "Drafting…" : "Draft with AI"}
+          </Button>
+        </div>
+        {aiState === "drafted" ? (
+          <div className="rounded-md border border-brand/30 bg-accent px-3 py-2 text-xs">
+            <span className="font-medium text-brand">AI-drafted against the current rubric.</span>{" "}
+            Review each score and rationale — adjust anything you disagree with.
+            Nothing is official until you save.
+            {aiCaveats ? (
+              <span className="mt-1 block text-muted-foreground">Check: {aiCaveats}</span>
+            ) : null}
+          </div>
+        ) : null}
         {DIMENSIONS.map((dim) => (
           <div key={dim} className="space-y-1.5">
             <div className="flex items-center gap-1.5">
