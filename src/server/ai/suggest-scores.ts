@@ -98,7 +98,8 @@ FORCING EVENT: ${r?.forcingEvent ?? "none"}`;
     "anthropic/claude-3-haiku",
   ];
   let lastError: unknown;
-  for (const model of MODELS) {
+  // Two attempts per model — structured output occasionally fails validation.
+  for (const model of MODELS.flatMap((m) => [m, m])) {
     try {
       const { output } = await generateText({
         model,
