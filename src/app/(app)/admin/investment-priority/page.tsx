@@ -4,6 +4,7 @@ import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { hasPermission } from "@/server/rbac/permissions";
 import { ReferenceForm } from "@/components/admin/reference-form";
+import { MarkExitedButton } from "@/components/admin/mark-exited-button";
 
 export const metadata = { title: "Investment Priority" };
 
@@ -75,11 +76,14 @@ export default async function InvestmentPriorityPage() {
                     </td>
                   )}
                   <td className="px-3 py-2 text-right">
-                    <ReferenceForm
-                      companyId={c.id}
-                      companyName={c.name}
-                      current={ref ? { checkSizeScore: ref.checkSizeScore, remainingValueScore: ref.remainingValueScore, runwayScore: ref.runwayScore } : undefined}
-                    />
+                    <div className="flex justify-end gap-1">
+                      <ReferenceForm
+                        companyId={c.id}
+                        companyName={c.name}
+                        current={ref ? { checkSizeScore: ref.checkSizeScore, remainingValueScore: ref.remainingValueScore, runwayScore: ref.runwayScore } : undefined}
+                      />
+                      <MarkExitedButton companyId={c.id} companyName={c.name} />
+                    </div>
                   </td>
                 </tr>
               );

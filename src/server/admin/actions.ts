@@ -154,6 +154,27 @@ export async function importCompaniesAction(pasted: string) {
   return { ok: true as const, created: createdCount, updated: updatedCount, errors };
 }
 
+/** One-click exit marking (also available via the company edit form). */
+export async function markCompanyExitedAction(companyId: string, exited: boolean) {
+  const session = await requirePermission("admin.companies");
+  const company = await db.portfolioCompany.update({
+    where: { id: companyId },
+    data: { exitedAt: exited ? new Date() : null },
+  });
+  await db.$transaction((tx) =>
+    writeAudit(tx, {
+      actorId: session.user.id,
+      action: exited ? "admin.company.exit" : "admin.company.unexit",
+      entityType: "PORTFOLIO_COMPANY",
+      entityId: company.id,
+      after: { name: company.name, exited },
+    }),
+  );
+  revalidatePath("/admin/companies");
+  revalidatePath("/admin/investment-priority");
+  return { ok: true as const };
+}
+
 /* ───────────────────────── BC Investment Priority ───────────────────────── */
 
 const referenceSchema = z.object({
