@@ -8,7 +8,8 @@ import { validateSubmission, type DraftData } from "@/lib/intake-schema";
 /** Statuses in which the requester may edit intake content. */
 const EDITABLE: InitiativeStatus[] = [InitiativeStatus.DRAFT, InitiativeStatus.NEEDS_INFORMATION];
 
-export async function createDraft(requesterId: string, requestType: RequestType) {
+/** requesterId null = public (unauthenticated) submission. */
+export async function createDraft(requesterId: string | null, requestType: RequestType) {
   const initiative = await db.$transaction(async (tx) => {
     const created = await tx.initiative.create({
       data: {
@@ -30,12 +31,17 @@ export async function createDraft(requesterId: string, requestType: RequestType)
   return initiative;
 }
 
-async function getOwnedEditable(initiativeId: string, userId: string) {
+/**
+ * Edit access: an authenticated owner, or — for public submissions
+ * (requesterId null) — possession of the unguessable draft link.
+ */
+async function getOwnedEditable(initiativeId: string, userId: string | null) {
   const initiative = await db.initiative.findUnique({
     where: { id: initiativeId, deletedAt: null },
     include: { intakeResponse: true },
   });
-  if (!initiative || initiative.requesterId !== userId) {
+  const isAnonymous = initiative?.requesterId == null;
+  if (!initiative || (!isAnonymous && initiative.requesterId !== userId)) {
     throw new AuthorizationError("Not your initiative");
   }
   if (!EDITABLE.includes(initiative.status)) {
@@ -48,13 +54,18 @@ async function getOwnedEditable(initiativeId: string, userId: string) {
  * Autosave: persists a partial draft. Repeating groups (KPIs, data sources,
  * systems) are replaced wholesale when present in the payload.
  */
-export async function saveDraft(initiativeId: string, userId: string, data: DraftData) {
-  await getOwnedEditable(initiativeId, userId);
+export async function saveDraft(initiativeId: string, userId: string | null, data: DraftData) {
+  const existing = await getOwnedEditable(initiativeId, userId);
 
   await db.$transaction(async (tx) => {
     // Initiative-level fields
     const initiativeData: Prisma.InitiativeUpdateInput = {};
     if (data.name !== undefined) initiativeData.name = data.name || "Untitled initiative";
+    // Requester contact is only writable on public submissions
+    if (existing.requesterId == null) {
+      if (data.requesterName !== undefined) initiativeData.requesterName = data.requesterName;
+      if (data.requesterEmail !== undefined) initiativeData.requesterEmail = data.requesterEmail;
+    }
     if (data.portfolioCompanyId !== undefined) {
       initiativeData.portfolioCompany = data.portfolioCompanyId
         ? { connect: { id: data.portfolioCompanyId } }
@@ -165,10 +176,12 @@ export async function saveDraft(initiativeId: string, userId: string, data: Draf
 }
 
 /** Validates completeness, locks the intake record, and submits. */
-export async function submitInitiative(initiativeId: string, userId: string) {
+export async function submitInitiative(initiativeId: string, userId: string | null) {
   const initiative = await getOwnedEditable(initiativeId, userId);
   const draft = await loadDraftData(initiativeId);
-  const missing = validateSubmission(initiative.requestType, draft);
+  const missing = validateSubmission(initiative.requestType, draft, {
+    anonymous: initiative.requesterId == null,
+  });
   if (missing.length > 0) return { ok: false as const, missing };
 
   await db.$transaction(async (tx) => {
@@ -206,6 +219,8 @@ export async function loadDraftData(initiativeId: string): Promise<DraftData> {
   });
   const r = i.intakeResponse;
   return {
+    requesterName: i.requesterName,
+    requesterEmail: i.requesterEmail,
     name: i.name === "Untitled initiative" ? "" : i.name,
     portfolioCompanyId: i.portfolioCompanyId,
     functionId: i.functionId,

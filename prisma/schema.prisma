@@ -133,7 +133,10 @@ model Initiative {
   requestType        RequestType
   name               String
   status             InitiativeStatus @default(DRAFT)
-  requesterId        String
+  /// Null for public (unauthenticated) submissions — see requesterName/Email.
+  requesterId        String?
+  requesterName      String?
+  requesterEmail     String?
   portfolioCompanyId String?
   functionId         String?
   submittedAt        DateTime?
@@ -141,7 +144,7 @@ model Initiative {
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 
-  requester        User              @relation("requester", fields: [requesterId], references: [id])
+  requester        User?             @relation("requester", fields: [requesterId], references: [id])
   portfolioCompany PortfolioCompany? @relation(fields: [portfolioCompanyId], references: [id])
   function         TaxonomyItem?     @relation("function", fields: [functionId], references: [id])
 
@@ -319,8 +322,9 @@ model StatusTransition {
   initiative   Initiative       @relation(fields: [initiativeId], references: [id])
   fromStatus   InitiativeStatus
   toStatus     InitiativeStatus
-  actorId      String
-  actor        User             @relation(fields: [actorId], references: [id])
+  /// Null when the actor is an unauthenticated public requester.
+  actorId      String?
+  actor        User?            @relation(fields: [actorId], references: [id])
   note         String?
   createdAt    DateTime         @default(now())
 

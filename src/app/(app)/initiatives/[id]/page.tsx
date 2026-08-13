@@ -73,7 +73,10 @@ export default async function InitiativeDetailPage({
           <HeaderItem label={initiative.portfolioCompany ? "Company" : "Specialist"}
             value={initiative.portfolioCompany?.name ?? r?.specialistWorkflow ?? "—"} />
           <HeaderItem label="Function" value={initiative.function?.label ?? "—"} />
-          <HeaderItem label="Requester" value={initiative.requester.name} />
+          <HeaderItem
+            label="Requester"
+            value={initiative.requester?.name ?? initiative.requesterName ?? "—"}
+          />
           <HeaderItem label="Sponsor" value={initiative.sponsor?.name ?? "—"} />
           <HeaderItem label="Request type" value={requestTypeLabel ?? "—"} />
           <HeaderItem label="Submitted"

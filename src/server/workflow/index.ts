@@ -24,7 +24,8 @@ export async function transitionInitiative(
   params: {
     initiativeId: string;
     to: InitiativeStatus;
-    actorId: string;
+    /** Null when the actor is an unauthenticated public requester. */
+    actorId: string | null;
     note?: string;
   },
   tx?: Prisma.TransactionClient,

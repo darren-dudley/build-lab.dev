@@ -13,6 +13,10 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { saveDraftAction, submitInitiativeAction } from "@/server/intake/actions";
 import {
+  savePublicDraftAction,
+  submitPublicInitiativeAction,
+} from "@/server/intake/public-actions";
+import {
   AFFECTED_OPTIONS, AI_TASK_HELPER, ACCESS_STATUS_OPTIONS, EFFORT_OPTIONS,
   PRIOR_ATTEMPT_OPTIONS, TTA_HELPER, VALUE_LEVER_OPTIONS, isPortfolioType,
   validateSubmission, type DraftData,
@@ -30,6 +34,8 @@ type Props = {
   specialistWorkflows: Option[];
   systems: Option[];
   initial: DraftData;
+  /** Public (unauthenticated) submission — requester enters their own contact info. */
+  publicMode?: boolean;
 };
 
 const STEPS = [
@@ -51,20 +57,25 @@ export function IntakeForm(props: Props) {
   const pending = useRef<DraftData>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const save = props.publicMode ? savePublicDraftAction : saveDraftAction;
+  const submitAction = props.publicMode
+    ? submitPublicInitiativeAction
+    : submitInitiativeAction;
+
   const flush = useCallback(async () => {
     const payload = pending.current;
     pending.current = {};
     if (Object.keys(payload).length === 0) return;
     setSaveState("saving");
     try {
-      await saveDraftAction(props.initiativeId, payload);
+      await save(props.initiativeId, payload);
       setSaveState("saved");
     } catch {
       setSaveState("error");
       // Re-queue so the next edit retries the failed payload
       pending.current = { ...payload, ...pending.current };
     }
-  }, [props.initiativeId]);
+  }, [props.initiativeId, save]);
 
   const update = useCallback(
     (patch: DraftData) => {
@@ -91,7 +102,9 @@ export function IntakeForm(props: Props) {
 
   function goTo(next: number) {
     void flush();
-    if (next === STEPS.length - 1) setMissing(validateSubmission(props.requestType, d));
+    if (next === STEPS.length - 1) {
+      setMissing(validateSubmission(props.requestType, d, { anonymous: props.publicMode }));
+    }
     setStep(Math.max(0, Math.min(STEPS.length - 1, next)));
     window.scrollTo({ top: 0 });
   }
@@ -99,7 +112,7 @@ export function IntakeForm(props: Props) {
   function submit() {
     startSubmit(async () => {
       await flush();
-      const result = await submitInitiativeAction(props.initiativeId);
+      const result = await submitAction(props.initiativeId);
       if (result && !result.ok) setMissing(result.missing);
     });
   }
@@ -226,7 +239,7 @@ function CheckboxGrid({
 /* ───────────────────────────── steps ───────────────────────────── */
 
 function StepRouting({
-  d, update, portfolio, requesterName, requesterEmail, companies, functions, specialistWorkflows,
+  d, update, portfolio, publicMode, requesterName, requesterEmail, companies, functions, specialistWorkflows,
 }: Props & { d: DraftData; update: (p: DraftData) => void; portfolio: boolean }) {
   return (
     <div className="space-y-5">
@@ -238,10 +251,27 @@ function StepRouting({
         />
       </Field>
 
-      <div className="rounded-md border bg-muted/30 px-4 py-3 text-sm">
-        <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Requester</div>
-        <div className="mt-1">{requesterName} · {requesterEmail}</div>
-      </div>
+      {publicMode ? (
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium">Who are you?</Label>
+          <p className="text-xs text-muted-foreground">
+            So the team can follow up on your submission.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Input placeholder="Your name" autoComplete="name"
+              value={d.requesterName ?? ""}
+              onChange={(e) => update({ requesterName: e.target.value })} />
+            <Input placeholder="Your email" type="email" autoComplete="email"
+              value={d.requesterEmail ?? ""}
+              onChange={(e) => update({ requesterEmail: e.target.value })} />
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-md border bg-muted/30 px-4 py-3 text-sm">
+          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Requester</div>
+          <div className="mt-1">{requesterName} · {requesterEmail}</div>
+        </div>
+      )}
 
       {portfolio ? (
         <>

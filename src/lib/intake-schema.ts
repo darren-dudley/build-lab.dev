@@ -84,6 +84,8 @@ const dataSourceSchema = z.object({
 
 /** Everything optional — autosave accepts partial state at any time. */
 export const draftDataSchema = z.object({
+  requesterName: z.string().max(200).optional().nullable(),
+  requesterEmail: z.string().max(320).optional().nullable(),
   name: z.string().max(200).optional(),
   portfolioCompanyId: z.string().uuid().optional().nullable(),
   functionId: z.string().uuid().optional().nullable(),
@@ -120,12 +122,20 @@ export const draftDataSchema = z.object({
 export type DraftData = z.infer<typeof draftDataSchema>;
 
 /** Branching submission requirements — what must exist before submit. */
-export function validateSubmission(requestType: string, d: DraftData): string[] {
+export function validateSubmission(
+  requestType: string,
+  d: DraftData,
+  opts?: { anonymous?: boolean },
+): string[] {
   const missing: string[] = [];
   const need = (cond: unknown, label: string) => {
     if (!cond) missing.push(label);
   };
 
+  if (opts?.anonymous) {
+    need(d.requesterName?.trim(), "Your name");
+    need(d.requesterEmail?.trim() && /.+@.+\..+/.test(d.requesterEmail), "Your email");
+  }
   need(d.name?.trim(), "Initiative name");
   need(d.businessProblem?.trim(), "Business problem");
   need(d.currentProcess?.trim(), "How this works today");
