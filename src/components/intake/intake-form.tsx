@@ -17,7 +17,7 @@ import {
   submitPublicInitiativeAction,
 } from "@/server/intake/public-actions";
 import {
-  AFFECTED_OPTIONS, AI_TASK_HELPER, ACCESS_STATUS_OPTIONS, EFFORT_OPTIONS,
+  AFFECTED_WHO, AFFECTED_WHAT, AI_TASK_HELPER, ACCESS_STATUS_OPTIONS, EFFORT_OPTIONS,
   PRIOR_ATTEMPT_OPTIONS, TTA_HELPER, VALUE_LEVER_OPTIONS, isPortfolioType,
   validateSubmission, type DraftData,
 } from "@/lib/intake-schema";
@@ -351,16 +351,34 @@ function StepProblem({ d, update }: { d: DraftData; update: (p: DraftData) => vo
           onChange={(e) => update({ currentProcess: e.target.value })}
         />
       </Field>
-      <Field label="Who or what is affected?">
-        <div className="space-y-3">
-          <CheckboxGrid
-            options={AFFECTED_OPTIONS}
-            selected={affected.selections}
-            onChange={(selections) => update({ affected: { ...affected, selections } })}
-          />
+      <Field
+        label="Who or what is affected?"
+        helper="Two parts: who deals with this problem today, and which business outcomes would improve if it were solved. Check everything that applies."
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Who deals with it today
+            </div>
+            <CheckboxGrid
+              options={AFFECTED_WHO}
+              selected={affected.selections}
+              onChange={(selections) => update({ affected: { ...affected, selections } })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              What would improve
+            </div>
+            <CheckboxGrid
+              options={AFFECTED_WHAT}
+              selected={affected.selections}
+              onChange={(selections) => update({ affected: { ...affected, selections } })}
+            />
+          </div>
           <Textarea
             rows={2}
-            placeholder="Briefly explain the impact…"
+            placeholder="In a sentence or two: who is affected, and what gets better. Example: our recruiting team spends 10 hours a week screening, and faster screening means faster offers."
             value={affected.explanation ?? ""}
             onChange={(e) => update({ affected: { ...affected, explanation: e.target.value } })}
           />

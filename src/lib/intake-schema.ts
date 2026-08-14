@@ -29,10 +29,17 @@ export function isPortfolioType(t: RequestTypeValue | string): boolean {
   return t === "SPECIALIST_PORTCO" || t === "GENERALIST_PORTCO";
 }
 
-export const AFFECTED_OPTIONS = [
-  "Individual", "Team", "Function", "Company", "Customers",
-  "Revenue", "Margin", "Cost", "Productivity", "Risk", "Strategic KPI", "Other",
+// "Who or what is affected" is really two questions: who feels the pain
+// today, and which business outcomes would move if this worked.
+export const AFFECTED_WHO = [
+  "An individual", "A team", "A whole function", "The whole company", "Customers",
 ] as const;
+
+export const AFFECTED_WHAT = [
+  "Revenue", "Cost", "Margin", "Productivity", "Risk", "A strategic KPI", "Other",
+] as const;
+
+export const AFFECTED_OPTIONS = [...AFFECTED_WHO, ...AFFECTED_WHAT] as const;
 
 export const VALUE_LEVER_OPTIONS = [
   "Revenue", "Cost", "Margin", "Productivity", "Customer Experience",

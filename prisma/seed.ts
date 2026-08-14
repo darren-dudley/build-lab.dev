@@ -45,7 +45,7 @@ const COMPANIES: { name: string; sector: string; bc: [number, number, number] }[
 
 const FUNCTIONS = ["Sales", "Marketing", "Finance", "Operations", "HR / People", "Product", "Technology / Engineering", "Customer Service", "Legal / Compliance", "Procurement", "Other"];
 
-const SPECIALIST_WORKFLOWS = ["Deal Sourcing & Screening", "Financial Planning & Analysis", "Sales Operations", "Talent & Recruiting", "Portfolio Reporting"];
+const SPECIALIST_WORKFLOWS = ["Talent & Recruiting", "Marketing", "Digital", "Artificial Intelligence", "Operations", "Finance", "IT", "Cyber Security", "Sales & GTM"];
 
 const SYSTEMS = ["Salesforce", "HubSpot", "NetSuite", "QuickBooks", "SAP", "Oracle", "Workday", "ADP", "Zendesk", "ServiceNow", "Microsoft 365", "Google Workspace", "Slack", "Snowflake", "Tableau", "Power BI", "Shopify", "Stripe", "Notion", "Airtable"];
 
