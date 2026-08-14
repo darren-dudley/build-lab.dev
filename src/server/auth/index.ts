@@ -4,6 +4,7 @@ import { compare } from "bcryptjs";
 import { z } from "zod";
 import type { RoleType } from "@prisma/client";
 import { db } from "@/server/db";
+import { clearFailures, isLockedOut, recordFailure } from "./rate-limit";
 
 declare module "next-auth" {
   interface Session {
@@ -33,15 +34,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
         const { email, password } = parsed.data;
 
+        // Durable brute-force throttle. Locked accounts fail generically so
+        // this never reveals whether an email exists.
+        if (await isLockedOut(email)) return null;
+
         const user = await db.user.findUnique({
           where: { email: email.toLowerCase() },
           include: { roles: true },
         });
-        if (!user || !user.isActive || user.deletedAt) return null;
+        if (!user || !user.isActive || user.deletedAt) {
+          await recordFailure(email);
+          return null;
+        }
 
         const valid = await compare(password, user.passwordHash);
-        if (!valid) return null;
+        if (!valid) {
+          await recordFailure(email);
+          return null;
+        }
 
+        await clearFailures(email);
         return {
           id: user.id,
           email: user.email,

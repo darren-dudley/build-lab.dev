@@ -48,6 +48,16 @@ model User {
   scoringVersionsCreated ScoringModelVersion[]
 }
 
+/// Durable brute-force throttle for credential login. Keyed by lowercased
+/// email so it survives serverless instance churn (in-memory would not).
+model LoginAttempt {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  failedCount Int       @default(0)
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
 model UserRole {
   id     String   @id @default(uuid())
   userId String

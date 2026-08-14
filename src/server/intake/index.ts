@@ -40,8 +40,14 @@ async function getOwnedEditable(initiativeId: string, userId: string | null) {
     where: { id: initiativeId, deletedAt: null },
     include: { intakeResponse: true },
   });
-  const isAnonymous = initiative?.requesterId == null;
-  if (!initiative || (!isAnonymous && initiative.requesterId !== userId)) {
+  // Public path (userId null) may only touch anonymous drafts; the
+  // authenticated path may only touch the caller's own initiative. Neither
+  // may cross into the other's records.
+  const ok =
+    userId === null
+      ? initiative?.requesterId == null
+      : initiative?.requesterId === userId;
+  if (!initiative || !ok) {
     throw new AuthorizationError("Not your initiative");
   }
   if (!EDITABLE.includes(initiative.status)) {
