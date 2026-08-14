@@ -196,6 +196,7 @@ model IntakeResponse {
   priorAttemptsDetail String?
   timeToArtifactValue Int?
   timeToArtifactUnit  String? // DAYS | WEEKS | MONTHS
+  noBaselineExists    Boolean  @default(false)
   onlyOneAnswer       String? // YES | NO | UNSURE
   onlyOneWhy          String?
   forcingEventDate    DateTime?

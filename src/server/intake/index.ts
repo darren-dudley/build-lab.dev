@@ -120,6 +120,7 @@ export async function saveDraft(initiativeId: string, userId: string | null, dat
         (ir as any)[to] = data[from];
       }
     }
+    if (data.noBaselineExists !== undefined) ir.noBaselineExists = data.noBaselineExists;
     if (data.affected !== undefined) ir.affected = (data.affected ?? Prisma.JsonNull) as Prisma.InputJsonValue;
     if (data.valueCreation !== undefined) ir.valueCreation = (data.valueCreation ?? Prisma.JsonNull) as Prisma.InputJsonValue;
     if (data.stepProgress !== undefined) ir.stepProgress = data.stepProgress as Prisma.InputJsonValue;
@@ -239,7 +240,7 @@ export async function loadDraftData(initiativeId: string): Promise<DraftData> {
       target: k.target,
       noBaseline: k.noBaseline,
     })),
-    noBaselineExists: i.kpis.some((k) => k.noBaseline),
+    noBaselineExists: (r?.noBaselineExists ?? false) || i.kpis.some((k) => k.noBaseline),
     valueCreation: (r?.valueCreation as DraftData["valueCreation"]) ?? null,
     effortEstimate: r?.effortEstimate ?? null,
     dataSources: i.dataSources.map((s) => ({
