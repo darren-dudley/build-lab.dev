@@ -21,6 +21,7 @@
     "@tanstack/react-table": "^9.1.2",
     "ai": "^7.0.65",
     "bcryptjs": "^3.0.3",
+    "botid": "^1.5.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

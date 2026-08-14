@@ -18,6 +18,12 @@ export default async function LoginPage({
 
   async function login(formData: FormData) {
     "use server";
+    // Block automated login floods (brute-force / credential stuffing). Only
+    // an explicit bot verdict blocks, so a detection outage fails open and
+    // never locks out real users.
+    const { checkBotId } = await import("botid/server");
+    const verdict = await checkBotId().catch(() => ({ isBot: false }));
+    if (verdict.isBot) redirect("/login?error=1");
     try {
       await signIn("credentials", {
         email: formData.get("email"),

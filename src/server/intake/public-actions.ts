@@ -12,7 +12,14 @@ import { db } from "@/server/db";
  * draft is possession of its unguessable URL, and only while editable.
  */
 
+async function assertNotBot() {
+  const { checkBotId } = await import("botid/server");
+  const verdict = await checkBotId().catch(() => ({ isBot: false }));
+  if (verdict.isBot) throw new Error("Request blocked");
+}
+
 export async function createPublicDraftAction(requestType: RequestType) {
+  await assertNotBot();
   const initiative = await createDraft(null, requestType);
   redirect(`/submit/${initiative.id}`);
 }
@@ -35,6 +42,7 @@ export async function savePublicDraftAction(initiativeId: string, raw: unknown) 
 }
 
 export async function submitPublicInitiativeAction(initiativeId: string) {
+  await assertNotBot();
   await assertPublic(initiativeId);
   const result = await submitInitiative(initiativeId, null);
   if (result.ok) redirect(`/submit/${initiativeId}`);
