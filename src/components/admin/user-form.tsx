@@ -31,6 +31,8 @@ export function UserForm({ user }: { user?: UserData }) {
   const [title, setTitle] = useState(user?.title ?? "");
   const [roles, setRoles] = useState<string[]>(user?.roles ?? ["REQUESTER"]);
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isActive, setIsActive] = useState(user?.isActive ?? true);
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
@@ -88,13 +90,27 @@ export function UserForm({ user }: { user?: UserData }) {
               ))}
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="text-sm font-medium">
-              {user ? "Reset password" : "Initial password"}
-              {user ? <span className="ml-1 font-normal text-muted-foreground">(leave blank to keep)</span> : null}
+          <div className="space-y-1.5">
+            <div className="flex items-baseline justify-between">
+              <div className="text-sm font-medium">
+                {user ? "Reset password" : "Initial password"}
+                {user ? <span className="ml-1 font-normal text-muted-foreground">(leave blank to keep)</span> : null}
+              </div>
+              <button
+                type="button"
+                className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
             </div>
-            <Input type="password" autoComplete="new-password" value={password}
+            <Input type={showPassword ? "text" : "password"} autoComplete="new-password" value={password}
               onChange={(e) => setPassword(e.target.value)} placeholder="10+ characters" />
+            <Input type={showPassword ? "text" : "password"} autoComplete="new-password" value={confirm}
+              onChange={(e) => setConfirm(e.target.value)} placeholder="Type it again to confirm" />
+            {password && confirm && password !== confirm ? (
+              <p className="text-xs text-destructive">The passwords don&apos;t match yet.</p>
+            ) : null}
           </div>
           {user ? (
             <label className="flex items-center gap-2 text-sm">
@@ -105,7 +121,7 @@ export function UserForm({ user }: { user?: UserData }) {
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button disabled={busy || !name.trim() || !email.trim() || roles.length === 0} onClick={save}>
+            <Button disabled={busy || !name.trim() || !email.trim() || roles.length === 0 || password !== confirm} onClick={save}>
               {busy ? "Saving…" : "Save"}
             </Button>
           </div>
