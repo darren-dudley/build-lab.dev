@@ -28,11 +28,11 @@ export default async function CompaniesAdminPage({
   const exitedCount = await db.portfolioCompany.count({ where: { deletedAt: null, exitedAt: { not: null } } });
   const companies = await db.portfolioCompany.findMany({
     where: { deletedAt: null, ...(showExited ? {} : { exitedAt: null }) },
-    orderBy: { name: "asc" },
     include: {
       _count: { select: { initiatives: true } },
     },
   });
+  companies.sort((a, b) => a.name.localeCompare(b.name));
   const refs = await db.investmentPriorityReference.findMany({
     orderBy: [{ effectiveDate: "desc" }, { version: "desc" }],
     distinct: ["companyId"],

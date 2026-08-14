@@ -20,11 +20,11 @@ export default async function InvestmentPriorityPage() {
 
   const companies = await db.portfolioCompany.findMany({
     where: { deletedAt: null, isActive: true, exitedAt: null },
-    orderBy: { name: "asc" },
     include: {
       investmentRefs: { orderBy: [{ effectiveDate: "desc" }, { version: "desc" }] },
     },
   });
+  companies.sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="mx-auto max-w-4xl space-y-4">
