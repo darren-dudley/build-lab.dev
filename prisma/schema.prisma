@@ -23,6 +23,8 @@ model User {
   title        String?
   passwordHash String
   isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  loginCount   Int       @default(0)
   deletedAt    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

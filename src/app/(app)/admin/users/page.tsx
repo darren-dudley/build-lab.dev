@@ -3,6 +3,8 @@ import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { hasPermission } from "@/server/rbac/permissions";
 import { UserForm } from "@/components/admin/user-form";
+import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
 
 export const metadata = { title: "Users" };
 
@@ -26,7 +28,12 @@ export default async function UsersAdminPage() {
     <div className="mx-auto max-w-4xl space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold tracking-tight">Users</h1>
-        <UserForm />
+        <div className="flex items-center gap-3">
+          <Link href="/admin/logins" className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground">
+            Login history
+          </Link>
+          <UserForm />
+        </div>
       </div>
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full min-w-[640px] text-sm">
@@ -36,6 +43,7 @@ export default async function UsersAdminPage() {
               <th className="px-3 py-2 font-medium">Email</th>
               <th className="px-3 py-2 font-medium">Title</th>
               <th className="px-3 py-2 font-medium">Roles</th>
+              <th className="px-3 py-2 font-medium">Last login</th>
               <th className="px-3 py-2 font-medium">Status</th>
               <th className="px-3 py-2" />
             </tr>
@@ -54,6 +62,13 @@ export default async function UsersAdminPage() {
                       </span>
                     ))}
                   </div>
+                </td>
+                <td className="px-3 py-2 text-xs text-muted-foreground">
+                  {u.lastLoginAt ? (
+                    <span title={`${u.loginCount} total`}>{formatDistanceToNow(u.lastLoginAt, { addSuffix: true })}</span>
+                  ) : (
+                    <span className="italic">never</span>
+                  )}
                 </td>
                 <td className="px-3 py-2">
                   {u.isActive ? (

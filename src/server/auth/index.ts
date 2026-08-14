@@ -29,7 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       credentials: { email: {}, password: {} },
-      async authorize(raw) {
+      async authorize(raw, request) {
         const parsed = credentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
         const { email, password } = parsed.data;
@@ -54,6 +54,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         await clearFailures(email);
+
+        // Record the successful sign-in: a per-user last-login stamp plus an
+        // append-only login event for the history log. Never let logging
+        // failure block a valid login.
+        const ip =
+          request?.headers?.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+        try {
+          await db.$transaction([
+            db.user.update({
+              where: { id: user.id },
+              data: { lastLoginAt: new Date(), loginCount: { increment: 1 } },
+            }),
+            db.auditEvent.create({
+              data: {
+                actorId: user.id,
+                action: "user.login",
+                entityType: "USER",
+                entityId: user.id,
+                after: { email: user.email, ip },
+              },
+            }),
+          ]);
+        } catch {
+          /* logging is best-effort */
+        }
+
         return {
           id: user.id,
           email: user.email,
