@@ -129,7 +129,7 @@ export function PortfolioTable({
         <FilterSelect value={fType} onChange={setFType} all="All score types" options={["Portfolio", "Specialist"]} />
         <FilterSelect value={fStatus} onChange={setFStatus} all="All statuses" options={statuses} />
         <Select value={group} onValueChange={(v) => setGroup(v as GroupKey)}>
-          <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 w-40 text-xs" aria-label="Group rows"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">No grouping</SelectItem>
             <SelectItem value="company">Group by company</SelectItem>
@@ -307,7 +307,7 @@ function FilterSelect({
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="h-8 w-40 text-xs"><SelectValue /></SelectTrigger>
+      <SelectTrigger className="h-8 w-40 text-xs" aria-label={all}><SelectValue /></SelectTrigger>
       <SelectContent>
         <SelectItem value="all">{all}</SelectItem>
         {options.map((o) => (

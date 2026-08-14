@@ -19,7 +19,7 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
       {sections.map((section, i) => (
         <div key={section.label ?? i} className="space-y-px">
           {section.label ? (
-            <div className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/45">
+            <div className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/75">
               {section.label}
             </div>
           ) : null}
