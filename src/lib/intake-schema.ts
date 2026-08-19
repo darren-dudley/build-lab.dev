@@ -68,8 +68,20 @@ export const ACCESS_STATUS_OPTIONS = [
   { value: "UNKNOWN", label: "Unknown" },
 ] as const;
 
+export const BUDGET_OPTIONS = [
+  { value: "UNSURE", label: "Unsure / to be determined" },
+  { value: "UNDER_50K", label: "Under $50K" },
+  { value: "B50_150K", label: "$50K - $150K" },
+  { value: "B150_500K", label: "$150K - $500K" },
+  { value: "OVER_500K", label: "$500K+" },
+] as const;
+
+export const BUDGET_LABELS: Record<string, string> = Object.fromEntries(
+  BUDGET_OPTIONS.map((o) => [o.value, o.label]),
+);
+
 export const TTA_HELPER =
-  "By artifact, we mean something sufficiently functional that a real user can interact with it or evaluate its usefulness.";
+  "A rough guess is fine, and you can leave it blank. The build team will assess what is practical. By artifact, we mean something a real user can interact with or evaluate.";
 
 export const AI_TASK_HELPER =
   'Describe the task itself, not just "use AI." Example: "Create first-pass PMC decks using CRM, customer usage, and support data."';
@@ -115,6 +127,7 @@ export const draftDataSchema = z.object({
   priorAttemptsDetail: z.string().optional().nullable(),
   timeToArtifactValue: z.number().int().positive().optional().nullable(),
   timeToArtifactUnit: z.enum(["DAYS", "WEEKS", "MONTHS"]).optional().nullable(),
+  budgetRange: z.enum(["UNSURE", "UNDER_50K", "B50_150K", "B150_500K", "OVER_500K"]).optional().nullable(),
   onlyOneAnswer: z.enum(["YES", "NO", "UNSURE"]).optional().nullable(),
   onlyOneWhy: z.string().optional().nullable(),
   forcingEventDate: z.string().optional().nullable(), // ISO date
@@ -149,7 +162,9 @@ export function validateSubmission(
   need(d.aiTask?.trim(), "What you want AI to do");
   need(d.successDefinition?.trim(), "What success looks like in 90 days");
   need(d.effortEstimate, "Effort estimate");
-  need(d.timeToArtifactValue && d.timeToArtifactUnit, "Time-to-Artifact estimate");
+  // Time-to-Artifact and the other feasibility fields are optional: the build
+  // team assesses feasibility during triage, so a submitter is never blocked
+  // by something they cannot judge.
   need(d.onlyOneAnswer, "Only-initiative-this-quarter answer");
   need(d.outcomeOwnerName?.trim(), "Business outcome owner");
 

@@ -10,7 +10,7 @@ import {
 import { ScoringPanel } from "@/components/triage/scoring-panel";
 import { StatusBadge } from "@/components/initiative/status-badge";
 import { EFFORT_LABELS, ttaLabel } from "@/lib/labels";
-import { ACCESS_STATUS_OPTIONS } from "@/lib/intake-schema";
+import { ACCESS_STATUS_OPTIONS, BUDGET_LABELS } from "@/lib/intake-schema";
 
 export const metadata = { title: "Triage" };
 
@@ -93,6 +93,7 @@ export default async function TriageWorkspacePage({
               value={initiative.submittedAt ? format(initiative.submittedAt, "MMM d, yyyy") : "—"} />
             <Item label="Effort / TTA"
               value={`${r?.effortEstimate ? EFFORT_LABELS[r.effortEstimate] : "—"} · ${ttaLabel(r?.timeToArtifactValue, r?.timeToArtifactUnit)}`} />
+            <Item label="Rough budget" value={r?.budgetRange ? BUDGET_LABELS[r.budgetRange] : "—"} />
           </dl>
 
           <Block title="Business problem" body={r?.businessProblem} />

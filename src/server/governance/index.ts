@@ -29,7 +29,7 @@ const rankingInclude = {
   intakeResponse: {
     select: {
       timeToArtifactValue: true, timeToArtifactUnit: true, effortEstimate: true,
-      forcingEvent: true, forcingEventDate: true,
+      budgetRange: true, forcingEvent: true, forcingEventDate: true,
     },
   },
   triageReview: { select: { normalizedProblem: true, normalizedAsk: true } },

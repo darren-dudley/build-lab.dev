@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/initiative/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CommentThread } from "@/components/shared/comment-thread";
 import { format } from "date-fns";
-import { REQUEST_TYPES, ACCESS_STATUS_OPTIONS } from "@/lib/intake-schema";
+import { REQUEST_TYPES, ACCESS_STATUS_OPTIONS, BUDGET_LABELS } from "@/lib/intake-schema";
 
 export const metadata = { title: "Initiative" };
 
@@ -109,9 +109,10 @@ export default async function InitiativeDetailPage({
           <Section title="Business problem" body={r?.businessProblem} />
           <Section title="Proposed AI task" body={r?.aiTask} />
           <Section title="What success looks like (90 days)" body={r?.successDefinition} />
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-4">
             <Stat label="Time-to-Artifact" value={tta ?? "—"} />
             <Stat label="Requester effort estimate" value={r?.effortEstimate ?? "—"} />
+            <Stat label="Rough budget" value={r?.budgetRange ? BUDGET_LABELS[r.budgetRange] : "—"} />
             <Stat label="Outcome owner"
               value={r?.outcomeOwnerName ? `${r.outcomeOwnerName}${r.outcomeOwnerTitle ? `, ${r.outcomeOwnerTitle}` : ""}` : "—"} />
           </div>

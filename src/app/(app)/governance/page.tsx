@@ -8,6 +8,7 @@ import { DecisionPanel } from "@/components/governance/decision-panel";
 import { CapacityStrip } from "@/components/governance/capacity-strip";
 import { StatusBadge } from "@/components/initiative/status-badge";
 import { DIMENSION_LABELS, EFFORT_LABELS, FLAG_LABELS, ttaLabel } from "@/lib/labels";
+import { BUDGET_LABELS } from "@/lib/intake-schema";
 
 export const metadata = { title: "Governance Queue" };
 
@@ -65,6 +66,7 @@ export default async function GovernanceQueuePage() {
                       {i.sponsor ? <> · Sponsor: {i.sponsor.name}</> : null}
                       {" · "}TTA {ttaLabel(i.intakeResponse?.timeToArtifactValue, i.intakeResponse?.timeToArtifactUnit)}
                       {" · "}Effort {i.intakeResponse?.effortEstimate ? EFFORT_LABELS[i.intakeResponse.effortEstimate] : "—"}
+                      {i.intakeResponse?.budgetRange ? <> · Budget {BUDGET_LABELS[i.intakeResponse.budgetRange]}</> : null}
                     </div>
                     {i.intakeResponse?.forcingEvent ? (
                       <div className="text-xs font-medium text-amber-700 dark:text-amber-400">

@@ -17,7 +17,7 @@ import {
   submitPublicInitiativeAction,
 } from "@/server/intake/public-actions";
 import {
-  AFFECTED_WHO, AFFECTED_WHAT, AI_TASK_HELPER, ACCESS_STATUS_OPTIONS, EFFORT_OPTIONS,
+  AFFECTED_WHO, AFFECTED_WHAT, AI_TASK_HELPER, ACCESS_STATUS_OPTIONS, BUDGET_OPTIONS, EFFORT_OPTIONS,
   PRIOR_ATTEMPT_OPTIONS, TTA_HELPER, VALUE_LEVER_OPTIONS, isPortfolioType,
   validateSubmission, type DraftData,
 } from "@/lib/intake-schema";
@@ -630,6 +630,21 @@ function StepPriority({ d, update }: { d: DraftData; update: (p: DraftData) => v
           <Input placeholder="Title" value={d.outcomeOwnerTitle ?? ""}
             onChange={(e) => update({ outcomeOwnerTitle: e.target.value })} />
         </div>
+      </Field>
+
+      <Field
+        label="Rough budget available for this idea?"
+        helper="A ballpark helps us weigh ideas that would run through the External FDE Pod, which is budgeted. Pick the closest range, or Unsure."
+        optional
+      >
+        <Select value={d.budgetRange ?? ""} onValueChange={(v) => update({ budgetRange: v as DraftData["budgetRange"] })}>
+          <SelectTrigger className="w-64"><SelectValue placeholder="Select a range" /></SelectTrigger>
+          <SelectContent>
+            {BUDGET_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
 
       <Field label="Anything else we should understand?" optional>

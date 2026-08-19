@@ -209,6 +209,7 @@ model IntakeResponse {
   timeToArtifactValue Int?
   timeToArtifactUnit  String? // DAYS | WEEKS | MONTHS
   noBaselineExists    Boolean  @default(false)
+  budgetRange         String? // rough budget available; feeds FDE Pod evaluation
   onlyOneAnswer       String? // YES | NO | UNSURE
   onlyOneWhy          String?
   forcingEventDate    DateTime?
