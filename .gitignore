@@ -28,3 +28,6 @@ npm-debug.log*
 
 # Test artifacts
 .playwright-mcp/
+
+# Allow the committed example (no secrets)
+!.env.example
