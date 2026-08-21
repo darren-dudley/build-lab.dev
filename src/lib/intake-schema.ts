@@ -152,32 +152,21 @@ export function validateSubmission(
     if (!cond) missing.push(label);
   };
 
+  // Core only. Everything else on the form is optional context that helps
+  // triage but never blocks a submission. Keep the required set to what is
+  // needed to understand and route an idea.
   if (opts?.anonymous) {
     need(d.requesterName?.trim(), "Your name");
     need(d.requesterEmail?.trim() && /.+@.+\..+/.test(d.requesterEmail), "Your email");
   }
   need(d.name?.trim(), "Initiative name");
-  need(d.businessProblem?.trim(), "Business problem");
-  need(d.currentProcess?.trim(), "How this works today");
+  need(d.businessProblem?.trim(), "The business problem or challenge");
   need(d.aiTask?.trim(), "What you want AI to do");
-  need(d.successDefinition?.trim(), "What success looks like in 90 days");
-  need(d.effortEstimate, "Effort estimate");
-  // Time-to-Artifact and the other feasibility fields are optional: the build
-  // team assesses feasibility during triage, so a submitter is never blocked
-  // by something they cannot judge.
-  need(d.onlyOneAnswer, "Only-initiative-this-quarter answer");
-  need(d.outcomeOwnerName?.trim(), "Business outcome owner");
 
   if (isPortfolioType(requestType)) {
+    // The company is required because scoring uses its investment priority.
     need(d.portfolioCompanyId, "Portfolio company");
-    need(d.functionId, "Function");
-    need(d.sponsorName?.trim(), "Internal sponsor");
-  } else {
-    need(d.specialistWorkflow?.trim(), "Specialist function / workflow");
   }
-
-  const hasKpis = (d.kpis?.length ?? 0) > 0 || d.noBaselineExists;
-  need(hasKpis, "At least one KPI (or confirm no meaningful baseline exists)");
 
   return missing;
 }

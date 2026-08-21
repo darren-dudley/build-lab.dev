@@ -288,7 +288,7 @@ function StepRouting({
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Function" helper="Where in the business does this live?">
+          <Field label="Function" helper="Where in the business does this live?" optional>
             <Select value={d.functionId ?? ""} onValueChange={(v) => update({ functionId: v })}>
               <SelectTrigger><SelectValue placeholder="Select function" /></SelectTrigger>
               <SelectContent>
@@ -299,7 +299,7 @@ function StepRouting({
             </Select>
           </Field>
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Internal sponsor</Label>
+            <Label className="text-sm font-medium">Internal sponsor <span className="font-normal text-muted-foreground">(optional)</span></Label>
             <p className="text-xs text-muted-foreground">
               The internal person sponsoring this with the portfolio company.
             </p>
@@ -311,7 +311,7 @@ function StepRouting({
           </div>
         </>
       ) : (
-        <Field label="Specialist function / workflow" helper="Which Specialist workflow is this for?">
+        <Field label="Specialist function / workflow" helper="Which Specialist workflow is this for?" optional>
           <Select
             value={d.specialistWorkflow ?? ""}
             onValueChange={(v) => update({ specialistWorkflow: v })}
@@ -343,6 +343,7 @@ function StepProblem({ d, update }: { d: DraftData; update: (p: DraftData) => vo
       </Field>
       <Field
         label="How does this work today?"
+        optional
         helper="Who does it, what systems or tools are used, roughly how often, how much time it takes, and the approximate cost if you know it."
       >
         <Textarea
@@ -353,6 +354,7 @@ function StepProblem({ d, update }: { d: DraftData; update: (p: DraftData) => vo
       </Field>
       <Field
         label="Who or what is affected?"
+        optional
         helper="Two parts: who deals with this problem today, and which business outcomes would improve if it were solved. Check everything that applies."
       >
         <div className="space-y-4">
@@ -398,12 +400,12 @@ function StepAsk({
       <Field label="What do you want AI to actually do?" helper={AI_TASK_HELPER}>
         <Textarea rows={4} value={d.aiTask ?? ""} onChange={(e) => update({ aiTask: e.target.value })} />
       </Field>
-      <Field label="What would success look like 90 days after this ships?">
+      <Field label="What would success look like 90 days after this ships?" optional>
         <Textarea rows={3} value={d.successDefinition ?? ""} onChange={(e) => update({ successDefinition: e.target.value })} />
       </Field>
 
       <div className="space-y-2">
-        <Label className="text-sm font-medium">What metrics exist today?</Label>
+        <Label className="text-sm font-medium">What metrics exist today? <span className="font-normal text-muted-foreground">(optional)</span></Label>
         <div className="space-y-2">
           {kpis.map((k, i) => (
             <div key={i} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
@@ -437,7 +439,7 @@ function StepAsk({
       </div>
 
       {portfolio ? (
-        <Field label="What value does this create?">
+        <Field label="What value does this create?" optional>
           <div className="space-y-3">
             <CheckboxGrid
               options={VALUE_LEVER_OPTIONS}
@@ -461,6 +463,7 @@ function StepAsk({
 
       <Field
         label="Requester effort estimate"
+        optional
         helper="Your rough sense — triage will make the final call."
       >
         <RadioGroup
@@ -525,7 +528,7 @@ function StepFeasibility({
         </Button>
       </div>
 
-      <Field label="What systems are involved?">
+      <Field label="What systems are involved?" optional>
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
             {systems.map((s) => (
@@ -551,7 +554,7 @@ function StepFeasibility({
         </div>
       </Field>
 
-      <Field label="Has this been attempted before?">
+      <Field label="Has this been attempted before?" optional>
         <Select value={d.priorAttempts ?? ""} onValueChange={(v) => update({ priorAttempts: v as DraftData["priorAttempts"] })}>
           <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
           <SelectContent>
@@ -592,7 +595,7 @@ function StepFeasibility({
 function StepPriority({ d, update }: { d: DraftData; update: (p: DraftData) => void }) {
   return (
     <div className="space-y-5">
-      <Field label="If you could fund only one AI initiative this quarter, would this be it?">
+      <Field label="If you could fund only one AI initiative this quarter, would this be it?" optional>
         <RadioGroup
           value={d.onlyOneAnswer ?? ""}
           onValueChange={(v) => update({ onlyOneAnswer: v as DraftData["onlyOneAnswer"] })}
@@ -623,7 +626,7 @@ function StepPriority({ d, update }: { d: DraftData; update: (p: DraftData) => v
         ) : null}
       </Field>
 
-      <Field label="Who owns the business outcome?">
+      <Field label="Who owns the business outcome?" optional>
         <div className="grid gap-2 sm:grid-cols-2">
           <Input placeholder="Name" value={d.outcomeOwnerName ?? ""}
             onChange={(e) => update({ outcomeOwnerName: e.target.value })} />
